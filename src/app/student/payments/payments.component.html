@@ -1,0 +1,207 @@
+<div class="container">
+  <h2 class="mb-4">Payment History</h2>
+
+  <!-- Payment History -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between">
+      <h5>Recent Payments</h5>
+      <div>
+        <button class="btn btn-info btn-sm me-2" (click)="testAuth()">
+          🔍 Test Auth
+        </button>
+        <button class="btn btn-primary btn-sm" (click)="togglePaymentForm()">
+          {{ showPaymentForm ? "Hide Payment Form" : "Make Payment" }}
+        </button>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <!-- Loading Indicator -->
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2 text-muted">Loading payment history...</p>
+      </div>
+
+      <!-- Payment Table -->
+      <table
+        class="table table-striped"
+        *ngIf="!loading && payments.length; else noData"
+      >
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th *ngIf="isAdmin">User</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Transaction ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let payment of payments; trackBy: trackByPaymentId">
+            <td>{{ payment.date | date : "shortDate" }}</td>
+            <td *ngIf="isAdmin">
+              {{ payment.username || payment.user_email || "Unknown" }}
+            </td>
+            <td>{{ payment.description }}</td>
+            <td>₹{{ payment.amount }}</td>
+            <td>{{ payment.method | titlecase }}</td>
+            <td>
+              <span
+                class="badge"
+                [class.bg-success]="payment.status === 'paid'"
+                [class.bg-warning]="payment.status === 'pending'"
+                [class.bg-danger]="payment.status === 'rejected'"
+              >
+                {{ payment.status | titlecase }}
+              </span>
+            </td>
+            <td>{{ payment.transaction_id || "N/A" }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ng-template #noData>
+        <p class="text-muted" *ngIf="!loading">No payment records found.</p>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- Make Payment (Hide / Show) -->
+  <div class="card shadow" *ngIf="showPaymentForm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">Make a Payment</h5>
+    </div>
+
+    <div class="card-body">
+      <form [formGroup]="paymentForm" (ngSubmit)="onMakePayment()">
+        <div *ngIf="paymentStep === 1">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">Payment Type</label>
+              <select
+                class="form-select"
+                formControlName="description"
+                required
+              >
+                <option value="">Select Payment Type</option>
+                <option value="Membership Fee">Membership Fee</option>
+                <option value="Late Fine">Late Fee / Fine</option>
+                <option value="Seat Booking">Seat Booking</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label font-weight-bold">Amount (₹)</label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="amount"
+                required
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn-primary w-100"
+            (click)="goToNextStep()"
+            [disabled]="!paymentForm.get('amount')?.valid"
+          >
+            Next: View Bank Details & Pay
+          </button>
+        </div>
+
+        <div *ngIf="paymentStep === 2">
+          <div class="alert alert-secondary border-primary">
+            <h6 class="text-primary">Admin Payment Details:</h6>
+            <p class="mb-1">
+              <strong>A/c Holder:</strong> {{ adminDetails.accountName }}
+            </p>
+            <p class="mb-1">
+              <strong>A/c Number:</strong> {{ adminDetails.accountNumber }}
+            </p>
+            <p class="mb-3"><strong>IFSC:</strong> {{ adminDetails.ifsc }}</p>
+            <div class="text-center">
+              <img
+                [src]="adminDetails.qrCode"
+                alt="QR Scanner"
+                class="img-thumbnail"
+                style="width: 180px"
+              />
+              <p class="small text-muted mt-1">Scan to pay via UPI</p>
+            </div>
+          </div>
+
+          <hr />
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Your Name (Bank/UPI)</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="account_holder_name"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Transaction ID / UTR</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="transaction_id"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Payment Date</label>
+              <input
+                type="date"
+                class="form-control"
+                formControlName="payment_date"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Screenshot of Payment</label>
+              <input
+                type="file"
+                class="form-control"
+                (change)="onFileSelected($event)"
+                accept="image/*"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button
+              type="button"
+              class="btn btn-outline-secondary flex-grow-1"
+              (click)="prevStep()"
+            >
+              Back
+            </button>
+            <button
+              type="submit"
+              class="btn btn-success flex-grow-1"
+              [disabled]="!paymentForm.valid || !selectedFile || loading"
+            >
+              <span
+                *ngIf="loading"
+                class="spinner-border spinner-border-sm me-2"
+                role="status"
+              ></span>
+              {{ loading ? "Submitting..." : "Submit Payment Proof" }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

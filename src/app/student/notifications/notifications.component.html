@@ -1,0 +1,116 @@
+<div class="container">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📢 Notifications</h2>
+    <button class="btn btn-outline-primary" (click)="loadNotifications()">
+      <i class="fas fa-sync-alt me-2"></i>Refresh
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Loading notifications...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="alert alert-warning">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ error }}
+    <button class="btn btn-sm btn-outline-warning ms-2" (click)="loadNotifications()">
+      Retry
+    </button>
+  </div>
+
+  <!-- Notifications List -->
+  <div *ngIf="!loading && !error" class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+        <i class="fas fa-bell me-2"></i>
+        Admin Notifications
+        <span class="badge bg-primary ms-2">{{ userNotifications.length }}</span>
+      </h5>
+      <small class="text-muted">
+        {{ unreadCount }} unread
+      </small>
+    </div>
+    <div class="card-body">
+
+      <div
+        *ngFor="let userNotification of userNotifications; trackBy: trackByNotificationId"
+        class="notification-item mb-3 p-3 border rounded"
+        [class.border-primary]="!userNotification.is_read"
+        [class.bg-light]="!userNotification.is_read"
+      >
+        <div class="d-flex justify-content-between align-items-start">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center mb-2">
+              <i [class]="getNotificationIcon(userNotification.notification.type || 'info')" class="me-2"></i>
+              <h6 class="mb-0 me-2">{{ userNotification.notification.title }}</h6>
+              <span [class]="getNotificationBadgeClass(userNotification.notification.type || 'info')">
+                {{ userNotification.notification.type || 'info' }}
+              </span>
+              <span *ngIf="!userNotification.is_read" class="badge bg-danger ms-2">New</span>
+            </div>
+
+            <p class="mb-2 text-muted">{{ userNotification.notification.message }}</p>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                <i class="fas fa-calendar me-1"></i>
+                {{ userNotification.created_at | date:'medium' }}
+              </small>
+
+              <div>
+                <small class="text-muted me-2">
+                  <i class="fas fa-user me-1"></i>
+                  From Admin
+                </small>
+
+                <button
+                  *ngIf="!userNotification.is_read"
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="markAsRead(userNotification)"
+                >
+                  <i class="fas fa-check me-1"></i>Mark Read
+                </button>
+
+                <span *ngIf="userNotification.is_read" class="text-success">
+                  <i class="fas fa-check-circle me-1"></i>Read
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="userNotifications.length === 0" class="text-center py-5">
+        <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+        <h5 class="text-muted">No Notifications Yet</h5>
+        <p class="text-muted">You will receive notifications from admin here.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Notification Statistics -->
+  <div *ngIf="userNotifications.length > 0" class="row mt-4">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <h3 class="text-primary">{{ readCount }}</h3>
+                <p class="text-muted mb-0">Read Notifications</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-body text-center">
+                <h3 class="text-warning">{{ unreadCount }}</h3>
+                <p class="text-muted mb-0">Unread Notifications</p>
+              </div>
+            </div>
+          </div>
+  </div>
+</div>

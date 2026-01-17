@@ -1,0 +1,67 @@
+<app-navbar></app-navbar>
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-12 col-md-3">
+      <div class="card">
+        <div class="card-header">
+          <h5>Admin Panel</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <a
+                routerLink="/admin/seats"
+                routerLinkActive="active"
+                class="btn btn-outline-primary w-100"
+                >Seat Management</a
+              >
+            </li>
+            <li class="list-group-item">
+              <a
+                routerLink="/admin/attendance"
+                routerLinkActive="active"
+                class="btn btn-outline-secondary w-100"
+                >Attendance Panel</a
+              >
+            </li>
+            <li class="list-group-item">
+              <a
+                routerLink="/admin/payments"
+                routerLinkActive="active"
+                class="btn btn-outline-success w-100"
+                >Payment Verification</a
+              >
+            </li>
+            <li class="list-group-item">
+              <a
+                routerLink="/admin/notifications"
+                routerLinkActive="active"
+                class="btn btn-outline-info w-100"
+                >Send Notifications</a
+              >
+            </li>
+            <li class="list-group-item">
+              <a
+                routerLink="/admin/feedback"
+                routerLinkActive="active"
+                class="btn btn-outline-warning w-100"
+                >Feedback Analysis</a
+              >
+            </li>
+            <li class="list-group-item">
+              <a
+                routerLink="/admin/leaderboard"
+                routerLinkActive="active"
+                class="btn btn-outline-warning w-100"
+                >leaderboard</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-9">
+  <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

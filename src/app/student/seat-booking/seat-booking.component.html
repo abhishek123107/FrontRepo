@@ -1,0 +1,275 @@
+<div class="container">
+  <h2 class="mb-4">Book Your Seat</h2>
+
+  <div class="row">
+    <!-- LEFT SECTION -->
+    <div class="col-md-8">
+      <!-- Seat Selection -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>Select Your Seat</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3 d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              <span *ngIf="loadingSeats">Loading seats...</span>
+              <span *ngIf="!loadingSeats">Total Seats: {{ seats.length }}</span>
+              <span
+                *ngIf="!loadingSeats && seats.length === 0"
+                class="text-danger"
+                >No seats found!</span
+              >
+            </small>
+            <small
+              class="text-success"
+              *ngIf="!loadingSeats && seats.length > 0"
+            >
+              <i class="fas fa-check-circle"></i> Seats loaded successfully
+            </small>
+          </div>
+
+          <!-- Seat Legend -->
+          <div class="row mb-3">
+            <div class="col-12">
+              <small class="text-muted">
+                <span class="badge bg-success me-2">Available</span>
+                <span class="badge bg-danger me-2">Booked</span>
+                <span class="badge bg-warning me-2">Maintenance</span>
+                <span class="badge bg-primary">Selected</span>
+              </small>
+            </div>
+          </div>
+
+          <!-- Seat Grid -->
+          <div class="seat-grid" *ngIf="seats.length > 0">
+            <div
+              *ngFor="let seat of seats; trackBy: trackBySeatId"
+              class="seat-item"
+            >
+              <button
+                class="btn seat-btn"
+                [class.available]="seat.status === 'available'"
+                [class.booked]="seat.status === 'booked'"
+                [class.maintenance]="seat.status === 'maintenance'"
+                [class.selected]="seat.selected"
+                [disabled]="
+                  seat.status === 'booked' || seat.status === 'maintenance'
+                "
+                (click)="selectSeat(seat)"
+                [title]="'Seat ' + seat.number + ' - ' + seat.status"
+              >
+                {{ seat.number }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Fallback message if no seats -->
+          <div
+            *ngIf="!loadingSeats && seats.length === 0"
+            class="text-center py-5"
+          >
+            <div class="alert alert-warning">
+              <h5>
+                <i class="fas fa-exclamation-triangle"></i> No Seats Available
+              </h5>
+              <p>Please contact the library administrator to add seats.</p>
+            </div>
+          </div>
+          <div *ngIf="loadingSeats" class="text-center mt-4">
+            <div class="alert alert-info">
+              <i class="fas fa-spinner fa-spin"></i>
+              Loading seats... Please wait.
+            </div>
+          </div>
+          <div
+            *ngIf="!loadingSeats && seats.length === 0"
+            class="text-center mt-4"
+          >
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              No seats available. Please check your internet connection or
+              contact administrator.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seat Photo -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>Seat Photo</h5>
+        </div>
+        <div class="card-body text-center">
+          <img
+            *ngIf="selectedSeat"
+            [src]="selectedSeat!.photo"
+            class="img-fluid rounded"
+            style="max-height: 300px"
+          />
+          <p *ngIf="!selectedSeat" class="text-muted">
+            Select a seat to view its photo
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT SECTION -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5>Booking Details</h5>
+        </div>
+
+        <div class="card-body">
+          <form #bookingForm="ngForm" (ngSubmit)="onBookSeat(bookingForm)">
+            <!-- Selected Seat -->
+            <div class="mb-3">
+              <label>Selected Seat</label>
+              <input
+                class="form-control"
+                [value]="selectedSeat?.number || 'None'"
+                readonly
+              />
+            </div>
+
+            <!-- Timing -->
+            <div class="mb-3">
+              <label>Timing Slot</label>
+              <select class="form-select" name="timing" ngModel required>
+                <option value="">Select</option>
+                <option value="morning">Morning</option>
+                <option value="evening">Evening</option>
+                <option value="full-day">Full Day</option>
+              </select>
+            </div>
+
+            <!-- Plan -->
+            <div class="mb-3">
+              <label>Membership Plan</label>
+              <select class="form-select" name="purpose" ngModel required>
+                <option value="">Select</option>
+                <option value="hourly">Hourly - ₹10/hour</option>
+                <option value="daily">Daily - ₹50/day</option>
+                <option value="monthly">Monthly - ₹500/month</option>
+              </select>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="mb-3">
+              <label>Payment Method</label>
+              <select class="form-select" name="payment" ngModel required>
+                <option value="">Select</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+              </select>
+            </div>
+
+            <!-- BOOK SEAT BUTTON (ONLY STEP 1) -->
+            <button
+              type="submit"
+              class="btn btn-primary w-100"
+              *ngIf="paymentStep === 1"
+              [disabled]="!bookingForm.valid || !selectedSeat"
+            >
+              Book Seat
+            </button>
+
+            <!-- OFFLINE MESSAGE -->
+            <div *ngIf="showOfflineMessage" class="alert alert-info mt-3">
+              Booking request sent. Please contact library office.
+            </div>
+
+            <!-- ONLINE PAYMENT SECTION -->
+            <div *ngIf="paymentStep === 2" class="mt-4">
+              <div class="alert alert-secondary border-primary">
+                <h6 class="text-primary">Admin Payment Details</h6>
+                <p>
+                  <strong>A/c Holder:</strong> {{ adminDetails.accountName }}
+                </p>
+                <p>
+                  <strong>A/c Number:</strong> {{ adminDetails.accountNumber }}
+                </p>
+                <p><strong>IFSC:</strong> {{ adminDetails.ifsc }}</p>
+
+                <div class="text-center">
+                  <img
+                    [src]="adminDetails.qrCode"
+                    class="img-thumbnail mt-2"
+                    style="width: 180px"
+                  />
+                  <p class="small text-muted mt-1">
+                    Scan QR & complete payment
+                  </p>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label>Payment Screenshot</label>
+                <input
+                  type="file"
+                  class="form-control"
+                  [class.is-invalid]="fileErrorMessage"
+                  (change)="onFileSelected($event)"
+                  accept="image/*"
+                />
+                <div *ngIf="fileErrorMessage" class="invalid-feedback d-block">
+                  {{ fileErrorMessage }}
+                </div>
+                <small class="text-muted">
+                  <i class="fas fa-info-circle"></i>
+                  Upload a clear screenshot of your payment (max 5MB, JPEG/PNG/GIF/WebP only)
+                </small>
+              </div>
+
+              <!-- PAYMENT FAILURE ALERT -->
+              <div *ngIf="paymentFailed" class="alert alert-danger mt-3">
+                <h6 class="text-danger mb-2">
+                  <i class="fas fa-exclamation-triangle"></i> Payment Failed
+                </h6>
+                <p class="mb-3">{{ paymentErrorMessage }}</p>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm me-2"
+                  (click)="retryPayment()"
+                  [disabled]="loading"
+                >
+                  <i class="fas fa-redo" [class]="loading ? 'fa-spin' : ''"></i>
+                  {{ loading ? "Retrying..." : "Try Again" }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  (click)="resetPaymentState(); paymentStep = 1"
+                >
+                  <i class="fas fa-arrow-left"></i> Change Details
+                </button>
+              </div>
+
+              <!-- TEST PAYMENT FAILURE BUTTON (FOR DEVELOPMENT) -->
+              <button
+                type="button"
+                class="btn btn-warning btn-sm w-100 mb-2"
+                (click)="simulatePaymentFailure()"
+                [disabled]="loading"
+                *ngIf="!paymentFailed && selectedFile"
+              >
+                <i class="fas fa-exclamation-triangle"></i> Simulate Payment Failure (Test)
+              </button>
+
+              <!-- FINAL PAY & BOOK BUTTON -->
+              <button
+                type="button"
+                class="btn btn-success w-100"
+                (click)="payAndBookSeat()"
+                [disabled]="!selectedFile || loading"
+                *ngIf="!paymentFailed"
+              >
+                {{ loading ? "Processing..." : "Pay & Book Seat" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

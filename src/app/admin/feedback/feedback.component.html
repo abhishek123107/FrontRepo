@@ -1,0 +1,185 @@
+<div class="container-fluid">
+  <h2 class="mb-4">Feedback Analysis</h2>
+
+  <!-- Statistics Overview -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-primary">{{ totalFeedback }}</h3>
+          <p class="mb-0">Total Feedback</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-success">{{ averageRating }}/5</h3>
+          <p class="mb-0">Average Rating</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-info">{{ positiveFeedback }}%</h3>
+          <p class="mb-0">Positive Feedback</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-warning">{{ recentFeedback }}</h3>
+          <p class="mb-0">This Month</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating Distribution -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>Rating Distribution</h5>
+    </div>
+    <div class="card-body">
+      <div *ngFor="let rating of ratingDistribution" class="mb-2">
+        <div class="d-flex justify-content-between align-items-center">
+          <span
+            >{{ rating.stars }} Star{{ rating.stars !== 1 ? "s" : "" }}</span
+          >
+          <div class="progress flex-grow-1 mx-3" style="height: 20px">
+            <div
+              class="progress-bar"
+              [style.width.%]="rating.percentage"
+              [class.bg-success]="rating.stars >= 4"
+              [class.bg-warning]="rating.stars === 3"
+              [class.bg-danger]="rating.stars <= 2"
+            >
+              {{ rating.count }}
+            </div>
+          </div>
+          <span>{{ rating.percentage }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback List -->
+  <div class="card">
+    <div class="card-header">
+      <h5>Recent Feedback</h5>
+      <div class="btn-group ms-auto">
+        <button
+          class="btn btn-sm btn-outline-secondary"
+          [class.active]="filter === 'all'"
+          (click)="setFilter('all')"
+        >
+          All
+        </button>
+        <button
+          class="btn btn-sm btn-outline-success"
+          [class.active]="filter === 'positive'"
+          (click)="setFilter('positive')"
+        >
+          Positive
+        </button>
+        <button
+          class="btn btn-sm btn-outline-warning"
+          [class.active]="filter === 'neutral'"
+          (click)="setFilter('neutral')"
+        >
+          Neutral
+        </button>
+        <button
+          class="btn btn-sm btn-outline-danger"
+          [class.active]="filter === 'negative'"
+          (click)="setFilter('negative')"
+        >
+          Negative
+        </button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div
+        *ngFor="let feedback of filteredFeedback"
+        class="feedback-item mb-4 p-3 border rounded"
+      >
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h6 class="mb-1">{{ feedback.studentName }}</h6>
+            <small class="text-muted">{{
+              feedback.date | date : "medium"
+            }}</small>
+          </div>
+          <div class="rating">
+            <span
+              *ngFor="let star of [1, 2, 3, 4, 5]"
+              class="star"
+              [class.filled]="star <= feedback.rating"
+            >
+              ★
+            </span>
+            <span class="ms-2">{{ feedback.rating }}/5</span>
+          </div>
+        </div>
+        <p class="mb-2">{{ feedback.comment }}</p>
+        <div class="feedback-tags">
+          <span
+            *ngFor="let tag of feedback.tags"
+            class="badge bg-secondary me-1"
+            >{{ tag }}</span
+          >
+        </div>
+      </div>
+
+      <div *ngIf="filteredFeedback.length === 0" class="text-center text-muted">
+        <p>No feedback found for the selected filter.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Common Issues/Suggestions -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h6>Common Issues</h6>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li
+              *ngFor="let issue of commonIssues"
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              {{ issue.text }}
+              <span class="badge bg-danger rounded-pill">{{
+                issue.count
+              }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h6>Top Suggestions</h6>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            <li
+              *ngFor="let suggestion of topSuggestions"
+              class="list-group-item d-flex justify-content-between align-items-center"
+            >
+              {{ suggestion.text }}
+              <span class="badge bg-success rounded-pill">{{
+                suggestion.count
+              }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

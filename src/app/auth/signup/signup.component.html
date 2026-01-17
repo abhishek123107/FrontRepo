@@ -1,0 +1,267 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-success text-white text-center">
+          <h4>
+            <i class="fas fa-user-plus me-2"></i>Sign Up for Library Seat
+            Booking
+          </h4>
+        </div>
+        <div class="card-body">
+          <!-- Error Alert -->
+          <div *ngIf="error" class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>{{ error }}
+          </div>
+
+          <form [formGroup]="signupForm" (ngSubmit)="onSignup()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="first_name" class="form-label">
+                  <i class="fas fa-user me-1"></i>First Name *
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="first_name"
+                  formControlName="first_name"
+                  placeholder="Enter first name"
+                  [class.is-invalid]="firstName?.invalid && firstName?.touched"
+                />
+                <div
+                  *ngIf="firstName?.invalid && firstName?.touched"
+                  class="invalid-feedback"
+                >
+                  First name is required
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="last_name" class="form-label">
+                  <i class="fas fa-user me-1"></i>Last Name *
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="last_name"
+                  formControlName="last_name"
+                  placeholder="Enter last name"
+                  [class.is-invalid]="lastName?.invalid && lastName?.touched"
+                />
+                <div
+                  *ngIf="lastName?.invalid && lastName?.touched"
+                  class="invalid-feedback"
+                >
+                  Last name is required
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="username" class="form-label">
+                  <i class="fas fa-at me-1"></i>Username *
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="username"
+                  formControlName="username"
+                  placeholder="Choose a username"
+                  [class.is-invalid]="username?.invalid && username?.touched"
+                />
+                <div
+                  *ngIf="username?.invalid && username?.touched"
+                  class="invalid-feedback"
+                >
+                  <span *ngIf="username?.errors?.['required']"
+                    >Username is required</span
+                  >
+                  <span *ngIf="username?.errors?.['minlength']"
+                    >Username must be at least 3 characters</span
+                  >
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">
+                  <i class="fas fa-envelope me-1"></i>Email *
+                </label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="email"
+                  formControlName="email"
+                  placeholder="Enter your email"
+                  [class.is-invalid]="email?.invalid && email?.touched"
+                />
+                <div
+                  *ngIf="email?.invalid && email?.touched"
+                  class="invalid-feedback"
+                >
+                  <span *ngIf="email?.errors?.['required']"
+                    >Email is required</span
+                  >
+                  <span *ngIf="email?.errors?.['email']"
+                    >Please enter a valid email</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="phone" class="form-label">
+                  <i class="fas fa-phone me-1"></i>Mobile Number
+                </label>
+                <input
+                  type="tel"
+                  class="form-control"
+                  id="phone"
+                  formControlName="phone"
+                  placeholder="Enter mobile number"
+                  [class.is-invalid]="phone?.invalid && phone?.touched"
+                />
+                <div
+                  *ngIf="phone?.invalid && phone?.touched"
+                  class="invalid-feedback"
+                >
+                  Please enter a valid mobile number
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="student_id" class="form-label">
+                  <i class="fas fa-id-card me-1"></i>Student ID
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="student_id"
+                  formControlName="student_id"
+                  placeholder="Enter student ID"
+                />
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="department" class="form-label">
+                  <i class="fas fa-building me-1"></i>Department
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="department"
+                  formControlName="department"
+                  placeholder="Enter department"
+                />
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="year_of_study" class="form-label">
+                  <i class="fas fa-graduation-cap me-1"></i>Year of Study
+                </label>
+                <select
+                  class="form-control"
+                  id="year_of_study"
+                  formControlName="year_of_study"
+                >
+                  <option value="">Select year</option>
+                  <option value="1">1st Year</option>
+                  <option value="2">2nd Year</option>
+                  <option value="3">3rd Year</option>
+                  <option value="4">4th Year</option>
+                  <option value="5">5th Year</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="password" class="form-label">
+                  <i class="fas fa-lock me-1"></i>Password *
+                </label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password"
+                  formControlName="password"
+                  placeholder="Enter password (min 8 characters)"
+                  [class.is-invalid]="password?.invalid && password?.touched"
+                />
+                <div
+                  *ngIf="password?.invalid && password?.touched"
+                  class="invalid-feedback"
+                >
+                  <span *ngIf="password?.errors?.['required']"
+                    >Password is required</span
+                  >
+                  <span *ngIf="password?.errors?.['minlength']"
+                    >Password must be at least 8 characters</span
+                  >
+                </div>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="password2" class="form-label">
+                  <i class="fas fa-lock me-1"></i>Confirm Password *
+                </label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="password2"
+                  formControlName="password2"
+                  placeholder="Confirm your password"
+                  [class.is-invalid]="
+                    password2?.invalid && password2?.touched
+                  "
+                />
+                <div
+                  *ngIf="password2?.invalid && password2?.touched"
+                  class="invalid-feedback"
+                >
+                  <span *ngIf="password2?.errors?.['required']"
+                    >Please confirm your password</span
+                  >
+                  <span *ngIf="password2?.errors?.['mismatch']"
+                    >Passwords do not match</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid">
+              <button
+                type="submit"
+                class="btn btn-success btn-lg"
+                [disabled]="signupForm.invalid || loading"
+              >
+                <span
+                  *ngIf="loading"
+                  class="spinner-border spinner-border-sm me-2"
+                  role="status"
+                ></span>
+                <i *ngIf="!loading" class="fas fa-user-plus me-2"></i>
+                {{ loading ? "Creating Account..." : "Sign Up" }}
+              </button>
+            </div>
+          </form>
+
+          <div class="text-center mt-3">
+            <p class="mb-0">
+              Already have an account?
+              <a routerLink="/login" class="text-primary fw-bold">Login</a>
+            </p>
+          </div>
+
+          <div class="text-center mt-2">
+            <a routerLink="/" class="text-muted">
+              <i class="fas fa-arrow-left me-1"></i>Back to Home
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

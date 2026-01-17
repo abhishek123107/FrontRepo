@@ -1,0 +1,175 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Seat Management</h2>
+    <button class="btn btn-primary" (click)="openAddModal()" [disabled]="loading">
+      <i class="bi bi-plus-circle"></i> Add New Seat
+    </button>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading seats...</p>
+  </div>
+
+  <!-- Seats Grid -->
+  <div *ngIf="!loading" class="row">
+    <div *ngIf="seats.length === 0" class="col-12 text-center py-5">
+      <i class="bi bi-chair" style="font-size: 3rem; color: #6c757d;"></i>
+      <h4 class="mt-3 text-muted">No seats found</h4>
+      <p class="text-muted">Add your first seat to get started</p>
+    </div>
+    
+    <div *ngFor="let seat of seats" class="col-md-3 col-sm-6 mb-4">
+      <div class="card h-100">
+        <img
+          [src]="getSeatPhoto(seat)"
+          class="card-img-top"
+          alt="Seat {{ seat.number }}"
+          style="height: 200px; object-fit: cover"
+          (error)="onImageError($event, seat)"
+        />
+        <div class="card-body">
+          <h5 class="card-title">Seat {{ seat.number }}</h5>
+          <p class="card-text">
+            <span
+              class="badge"
+              [class.bg-success]="seat.status === 'available'"
+              [class.bg-danger]="seat.status === 'booked'"
+              [class.bg-warning]="seat.status === 'maintenance'"
+            >
+              {{ seat.status }}
+            </span>
+          </p>
+          <div class="btn-group w-100">
+            <button
+              class="btn btn-outline-primary btn-sm"
+              (click)="editSeat(seat)"
+              [disabled]="loading"
+            >
+              <i class="bi bi-pencil"></i> Edit
+            </button>
+            <button
+              class="btn btn-outline-danger btn-sm"
+              (click)="deleteSeat(seat)"
+              [disabled]="loading"
+            >
+              <i class="bi bi-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div
+    class="modal fade"
+    id="seatModal"
+    tabindex="-1"
+    [class.show]="showModal"
+    [style.display]="showModal ? 'block' : 'none'"
+  >
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            {{ isEditing ? "Edit Seat" : "Add New Seat" }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="closeModal()"
+            [disabled]="loading"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <form #seatForm="ngForm" (ngSubmit)="saveSeat(seatForm)">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Seat Number *</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="number"
+                    ngModel
+                    required
+                    [(ngModel)]="currentSeat.number"
+                    placeholder="Enter seat number"
+                    [disabled]="loading"
+                  />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Status *</label>
+                  <select
+                    class="form-select"
+                    name="status"
+                    ngModel
+                    required
+                    [(ngModel)]="currentSeat.status"
+                    [disabled]="loading"
+                  >
+                    <option value="available">Available</option>
+                    <option value="booked">Booked</option>
+                    <option value="maintenance">Maintenance</option>
+                  </select>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Seat Photo</label>
+                  <input
+                    type="file"
+                    class="form-control"
+                    (change)="onFileSelected($event)"
+                    accept="image/*"
+                    [disabled]="loading"
+                  />
+                  <small class="text-muted">Upload a photo of seat (JPG, PNG)</small>
+                </div>
+                <div *ngIf="currentSeat.photo" class="mb-3">
+                  <label class="form-label">Preview</label>
+                  <img
+                    [src]="currentSeat.photo"
+                    alt="Preview"
+                    class="img-fluid rounded"
+                    style="max-height: 150px; width: 100%; object-fit: cover;"
+                  />
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                (click)="closeModal()"
+                [disabled]="loading"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="!seatForm.valid || loading"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ loading ? (isEditing ? "Updating..." : "Adding...") : "Save Seat" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade show" *ngIf="showModal"></div>
+</div>

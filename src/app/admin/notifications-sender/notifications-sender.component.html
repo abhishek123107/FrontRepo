@@ -1,0 +1,266 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📢 Send Notifications</h2>
+    <button class="btn btn-outline-primary" (click)="loadSentNotifications()">
+      <i class="fas fa-sync-alt me-2"></i>Refresh
+    </button>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-edit me-2"></i>Compose Notification
+          </h5>
+        </div>
+        <div class="card-body">
+
+          <!-- Loading State -->
+          <div *ngIf="loading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Sending...</span>
+            </div>
+            <p class="mt-2 text-muted">Sending notification...</p>
+          </div>
+
+          <!-- Form -->
+          <form
+            #notificationForm="ngForm"
+            (ngSubmit)="sendNotification(notificationForm)"
+            *ngIf="!loading"
+          >
+
+            <!-- Notification Type -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">📋 Notification Type</label>
+              <select
+                class="form-select"
+                name="type"
+                ngModel
+                required
+                [(ngModel)]="notification.type"
+              >
+                <option value="">Select notification type</option>
+                <option value="info">ℹ️ Information</option>
+                <option value="success">✅ Success</option>
+                <option value="warning">⚠️ Warning</option>
+                <option value="danger">🚨 Alert</option>
+              </select>
+            </div>
+
+            <!-- Title -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">📝 Title</label>
+              <input
+                type="text"
+                class="form-control"
+                name="title"
+                ngModel
+                required
+                placeholder="Enter notification title"
+                [(ngModel)]="notification.title"
+              />
+            </div>
+
+            <!-- Message -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">💬 Message</label>
+              <textarea
+                class="form-control"
+                rows="4"
+                name="message"
+                ngModel
+                required
+                placeholder="Enter notification message"
+                [(ngModel)]="notification.message"
+              ></textarea>
+            </div>
+
+            <!-- Target Audience -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">👥 Target Audience</label>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="target_audience"
+                      value="all"
+                      ngModel
+                      required
+                      [(ngModel)]="notification.target_audience"
+                    />
+                    <label class="form-check-label">
+                      <i class="fas fa-users me-1"></i>All Users
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="target_audience"
+                      value="students"
+                      ngModel
+                      required
+                      [(ngModel)]="notification.target_audience"
+                    />
+                    <label class="form-check-label">
+                      <i class="fas fa-graduation-cap me-1"></i>Students Only
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="target_audience"
+                      value="staff"
+                      ngModel
+                      required
+                      [(ngModel)]="notification.target_audience"
+                    />
+                    <label class="form-check-label">
+                      <i class="fas fa-user-tie me-1"></i>Staff Only
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="target_audience"
+                      value="specific_users"
+                      ngModel
+                      required
+                      [(ngModel)]="notification.target_audience"
+                    />
+                    <label class="form-check-label">
+                      <i class="fas fa-user-check me-1"></i>Specific Users
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-flex gap-2">
+              <button
+                type="submit"
+                class="btn btn-success flex-grow-1"
+                [disabled]="!notificationForm.valid"
+              >
+                <i class="fas fa-paper-plane me-2"></i>
+                Send Notification
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                (click)="resetForm()"
+              >
+                <i class="fas fa-eraser me-2"></i>
+                Clear
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-md-4">
+
+      <!-- Quick Templates -->
+      <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-magic me-2"></i>Quick Templates
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <button
+              class="btn btn-outline-warning btn-sm"
+              (click)="loadTemplate('expiry')"
+            >
+              <i class="fas fa-clock me-1"></i>Membership Expiry
+            </button>
+            <button
+              class="btn btn-outline-info btn-sm"
+              (click)="loadTemplate('maintenance')"
+            >
+              <i class="fas fa-tools me-1"></i>Maintenance Notice
+            </button>
+            <button
+              class="btn btn-outline-success btn-sm"
+              (click)="loadTemplate('holiday')"
+            >
+              <i class="fas fa-calendar-alt me-1"></i>Holiday Notice
+            </button>
+            <button
+              class="btn btn-outline-danger btn-sm"
+              (click)="loadTemplate('rules')"
+            >
+              <i class="fas fa-book me-1"></i>Library Rules
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sent Notifications -->
+      <div class="card">
+        <div class="card-header bg-success text-white">
+          <h6 class="mb-0">
+            <i class="fas fa-history me-2"></i>Sent Notifications
+            <span class="badge bg-light text-dark ms-2">{{ sentNotifications.length }}</span>
+          </h6>
+        </div>
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+          <div
+            *ngFor="let notification of sentNotifications; trackBy: trackByNotificationId"
+            class="notification-item mb-3 p-2 border rounded"
+          >
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-1">
+                  <i [class]="getNotificationIcon(notification.type || 'info')" class="me-1"></i>
+                  <small class="fw-bold text-truncate">{{ notification.title }}</small>
+                </div>
+                <small class="text-muted d-block">
+                  <i class="fas fa-calendar me-1"></i>
+                  {{ notification.created_at | date:'short' }}
+                </small>
+                <small class="text-success d-block">
+                  <i class="fas fa-users me-1"></i>
+                  {{ notification.target_audience || 'all' }}
+                  <span *ngIf="notification.recipient_count"> ({{ notification.recipient_count }})</span>
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="sentNotifications.length === 0" class="text-center py-3">
+            <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+            <p class="text-muted small mb-0">No notifications sent yet</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div class="alert alert-success alert-dismissible fade show mt-4" *ngIf="successMessage">
+    <i class="fas fa-check-circle me-2"></i>
+    {{ successMessage }}
+    <button type="button" class="btn-close" (click)="successMessage = ''"></button>
+  </div>
+
+  <div class="alert alert-danger alert-dismissible fade show mt-4" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    {{ errorMessage }}
+    <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+  </div>
+
+</div>

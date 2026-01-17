@@ -1,0 +1,145 @@
+<div class="container">
+  <h2 class="mb-4">Mark Attendance</h2>
+
+  <!-- Active Sessions -->
+  <div class="row mb-4" *ngIf="activeSessions.length > 0">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>Active Sessions</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-4 mb-3" *ngFor="let session of activeSessions">
+              <div class="card h-100" [class.border-primary]="selectedSession?.id === session.id">
+                <div class="card-body">
+                  <h6 class="card-title">{{ session.title }}</h6>
+                  <p class="card-text">{{ session.description }}</p>
+                  <small class="text-muted">
+                    Type: {{ getSessionTypeText(session.session_type) }}<br>
+                    Time: {{ session.start_time | date:'short' }} - {{ session.end_time | date:'short' }}
+                  </small>
+                  <br>
+                  <button
+                    class="btn btn-sm mt-2"
+                    [class.btn-primary]="selectedSession?.id === session.id"
+                    [class.btn-outline-primary]="selectedSession?.id !== session.id"
+                    (click)="selectSession(session)">
+                    {{ selectedSession?.id === session.id ? 'Selected' : 'Select' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Attendance Options -->
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5>Attendance Options</h5>
+        </div>
+        <div class="card-body">
+
+          <!-- QR Code Section -->
+          <div class="mb-4">
+            <h6>Scan QR Code</h6>
+            <p class="text-muted">
+              Mark attendance by scanning the QR code
+            </p>
+            <div class="input-group mb-2">
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Enter QR code token"
+                [(ngModel)]="qrCodeInput"
+                name="qrCodeInput">
+              <button
+                class="btn btn-primary"
+                (click)="scanQRCode()"
+                [disabled]="loading">
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+                Submit QR Code
+              </button>
+            </div>
+          </div>
+
+          <!-- Admin Approval Section -->
+          <div class="mb-4" *ngIf="selectedSession">
+            <h6>Or request admin approval</h6>
+            <p class="text-muted">
+              Send a request to admin to mark your attendance
+            </p>
+            <button
+              class="btn btn-secondary"
+              (click)="requestAdminApproval()"
+              [disabled]="loading">
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+              Request Admin Approval
+            </button>
+          </div>
+
+          <!-- Status Messages -->
+          <div
+            *ngIf="attendanceStatus"
+            class="alert mt-3"
+            [class.alert-success]="attendanceStatus === 'marked'"
+            [class.alert-info]="attendanceStatus === 'pending'">
+            {{
+              attendanceStatus === "marked"
+                ? "✅ Attendance marked successfully!"
+                : "📋 Request sent for admin approval."
+            }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Attendance History -->
+  <div class="row mt-4" *ngIf="myAttendance.length > 0">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5>My Attendance History</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Session</th>
+                  <th>Status</th>
+                  <th>Check-in Time</th>
+                  <th>Duration (Minutes)</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let record of myAttendance">
+                  <td>{{ record.session }}</td>
+                  <td>
+                    <span class="badge"
+                          [class.bg-success]="record.status === 'present'"
+                          [class.bg-warning]="record.status === 'late'"
+                          [class.bg-danger]="record.status === 'absent'"
+                          [class.bg-info]="record.status === 'excused'">
+                      {{ getStatusText(record.status) }}
+                    </span>
+                  </td>
+                  <td>{{ record.check_in_time | date:'short' }}</td>
+                  <td>{{ record.duration_minutes || 'N/A' }}</td>
+                  <td>{{ record.created_at | date:'shortDate' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,283 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Payment Verification</h2>
+    <div>
+      <button class="btn btn-warning me-2" (click)="clearAllPayments()" [disabled]="loading">
+        <i class="bi bi-trash"></i> Clear All Pending
+      </button>
+      <button class="btn btn-primary" (click)="loadPayments()" [disabled]="loading">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="error" class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <h5 class="card-title">Total Payments</h5>
+          <h3>{{ payments.length }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-white">
+        <div class="card-body">
+          <h5 class="card-title">Pending</h5>
+          <h3>{{ getStats('pending') }}</h3>
+          <small>₹{{ getPendingAmount() | number }}</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">Approved</h5>
+          <h3>{{ getStats('paid') }}</h3>
+          <small>₹{{ getTotalAmount() | number }}</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card bg-danger text-white">
+        <div class="card-body">
+          <h5 class="card-title">Rejected</h5>
+          <h3>{{ getStats('rejected') }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Filter by Status</label>
+          <select
+            class="form-select"
+            [(ngModel)]="statusFilter"
+            (change)="onFiltersChanged()"
+          >
+            <option value="all">All Payments</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Payment Method</label>
+          <select
+            class="form-select"
+            [(ngModel)]="methodFilter"
+            (change)="onFiltersChanged()"
+          >
+            <option value="all">All Methods</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Start Date</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="startDate"
+            (change)="onFiltersChanged()"
+          />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">End Date</label>
+          <input
+            type="date"
+            class="form-control"
+            [(ngModel)]="endDate"
+            (change)="onFiltersChanged()"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading payments...</p>
+  </div>
+
+  <!-- No Payments State -->
+  <div *ngIf="!loading && filteredPayments.length === 0" class="text-center py-5">
+    <i class="bi bi-credit-card" style="font-size: 3rem; color: #6c757d;"></i>
+    <h4 class="mt-3 text-muted">No payments found</h4>
+    <p class="text-muted">No payment records match the current filters.</p>
+  </div>
+
+  <!-- Payments Table -->
+  <div *ngIf="!loading && filteredPayments.length > 0" class="card">
+    <div class="card-header">
+      <h5>Payment Requests ({{ filteredPayments.length }})</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Proof</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payment of filteredPayments">
+              <td>
+                <div>
+                  <strong>{{ payment.username }}</strong>
+                  <br />
+                  <small class="text-muted">{{ payment.user_email }}</small>
+                </div>
+              </td>
+              <td>{{ payment.description || payment.plan_name || 'Payment' }}</td>
+              <td><strong>₹{{ payment.amount }}</strong></td>
+              <td>
+                <span
+                  class="badge"
+                  [class.bg-primary]="payment.method === 'online'"
+                  [class.bg-secondary]="payment.method === 'offline'"
+                >
+                  {{ payment.method }}
+                </span>
+              </td>
+              <td>{{ payment.date | date : "medium" }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [class.bg-warning]="payment.status === 'pending'"
+                  [class.bg-success]="payment.status === 'paid'"
+                  [class.bg-danger]="payment.status === 'rejected'"
+                >
+                  {{ payment.status }}
+                </span>
+              </td>
+              <td>
+                <button
+                  *ngIf="payment.screenshot"
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="viewProof(payment)"
+                  title="View Payment Proof"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                <span
+                  *ngIf="!payment.screenshot"
+                  class="text-muted"
+                  title="No proof uploaded"
+                >
+                  <i class="bi bi-dash"></i>
+                </span>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button
+                    *ngIf="payment.status === 'pending'"
+                    class="btn btn-sm btn-success"
+                    (click)="approvePayment(payment)"
+                    title="Approve Payment"
+                  >
+                    <i class="bi bi-check-circle"></i>
+                  </button>
+                  <button
+                    *ngIf="payment.status === 'pending'"
+                    class="btn btn-sm btn-danger"
+                    (click)="rejectPayment(payment)"
+                    title="Reject Payment"
+                  >
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="deletePayment(payment)"
+                    title="Delete Payment"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Proof Modal -->
+  <div
+    class="modal fade"
+    id="proofModal"
+    tabindex="-1"
+    [class.show]="showProofModal"
+    [style.display]="showProofModal ? 'block' : 'none'"
+  >
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            Payment Proof - {{ selectedPayment?.username }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            (click)="closeProofModal()"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="selectedPayment" class="mb-3">
+            <p><strong>Amount:</strong> ₹{{ selectedPayment.amount }}</p>
+            <p><strong>Method:</strong> {{ selectedPayment.method }}</p>
+            <p><strong>Description:</strong> {{ selectedPayment.description || selectedPayment.plan_name || 'Payment' }}</p>
+            <p><strong>Date:</strong> {{ selectedPayment.date | date : "medium" }}</p>
+          </div>
+          
+          <div *ngIf="selectedProof" class="text-center">
+            <img
+              [src]="getPaymentImageUrl(selectedProof)"
+              alt="Payment Proof"
+              class="img-fluid rounded"
+              style="max-height: 400px; width: 100%; object-fit: contain;"
+              (error)="onImageError($event)"
+            />
+          </div>
+          
+          <div *ngIf="!selectedProof" class="text-center text-muted">
+            <i class="bi bi-image" style="font-size: 3rem;"></i>
+            <p class="mt-3">No payment proof uploaded</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="closeProofModal()"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade show" *ngIf="showProofModal"></div>
+</div>

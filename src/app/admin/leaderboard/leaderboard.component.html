@@ -1,0 +1,177 @@
+<div class="container-fluid">
+  <h2 class="mb-4">Top Students Leaderboard</h2>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4">
+          <label class="form-label">Time Period</label>
+          <select
+            class="form-select"
+            [(ngModel)]="timeFilter"
+            (change)="loadLeaderboard()"
+          >
+            <option value="weekly">This Week</option>
+            <option value="monthly">This Month</option>
+            <option value="yearly">This Year</option>
+            <option value="all-time">All Time</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Sort By</label>
+          <select
+            class="form-select"
+            [(ngModel)]="sortBy"
+            (change)="sortLeaderboard()"
+          >
+            <option value="attendance">Attendance Hours</option>
+            <option value="consistency">Consistency</option>
+            <option value="bookings">Total Bookings</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Top</label>
+          <select
+            class="form-select"
+            [(ngModel)]="topCount"
+            (change)="loadLeaderboard()"
+          >
+            <option value="10">Top 10</option>
+            <option value="25">Top 25</option>
+            <option value="50">Top 50</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Table -->
+  <div class="card">
+    <div class="card-header">
+      <h5>Top {{ topCount }} Students - {{ timeFilter | titlecase }}</h5>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Student</th>
+              <th>Attendance Hours</th>
+              <th>Total Bookings</th>
+              <th>Consistency Score</th>
+              <th>Achievement Badge</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let student of leaderboard; let i = index"
+              [class.table-warning]="i < 3"
+            >
+              <td>
+                <span
+                  class="badge"
+                  [class.bg-warning]="i === 0"
+                  [class.bg-secondary]="i === 1"
+                  [class.bg-danger]="i === 2"
+                  style="font-size: 1.2em"
+                >
+                  #{{ i + 1 }}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <img
+                    [src]="student.avatar"
+                    alt="Avatar"
+                    class="rounded-circle me-3"
+                    style="width: 40px; height: 40px"
+                  />
+                  <div>
+                    <strong>{{ student.name }}</strong
+                    ><br />
+                    <small class="text-muted">{{ student.email }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>{{ student.attendanceHours }}h</td>
+              <td>{{ student.totalBookings }}</td>
+              <td>
+                <div class="progress" style="width: 100px">
+                  <div
+                    class="progress-bar"
+                    [style.width.%]="student.consistencyScore"
+                  >
+                    {{ student.consistencyScore }}%
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span *ngIf="i === 0" class="badge bg-warning"
+                  >🏆 Champion</span
+                >
+                <span *ngIf="i === 1" class="badge bg-secondary"
+                  >🥈 Runner-up</span
+                >
+                <span *ngIf="i === 2" class="badge bg-danger"
+                  >🥉 Third Place</span
+                >
+                <span
+                  *ngIf="i >= 3 && student.consistencyScore >= 90"
+                  class="badge bg-success"
+                  >⭐ Consistent</span
+                >
+                <span
+                  *ngIf="i >= 3 && student.attendanceHours >= 100"
+                  class="badge bg-info"
+                  >📚 Dedicated</span
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="leaderboard.length === 0" class="text-center text-muted mt-4">
+        <p>No data available for the selected period.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="row mt-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-primary">{{ totalStudents }}</h3>
+          <p class="mb-0">Active Students</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-success">{{ averageAttendance }}</h3>
+          <p class="mb-0">Avg Attendance (hrs)</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-info">{{ totalBookings }}</h3>
+          <p class="mb-0">Total Bookings</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h3 class="text-warning">{{ topPerformer }}</h3>
+          <p class="mb-0">Top Performer</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
