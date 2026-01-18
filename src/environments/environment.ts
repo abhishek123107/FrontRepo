@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8001/api',
-  backendUrl: 'http://localhost:8001'
+  apiUrl: 'https://backendrepo-5.onrender.com/api',
+  backendUrl: 'https://backendrepo-5.onrender.com'
 };
