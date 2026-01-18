@@ -1,0 +1,185 @@
+<div class="container-fluid">
+  <!-- Statistics Cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-center">
+        <div class="card-body">
+          <h5 class="card-title">{{ totalStudents }}</h5>
+          <p class="card-text">Total Students</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center bg-success text-white">
+        <div class="card-body">
+          <h5 class="card-title">{{ activeStudents }}</h5>
+          <p class="card-text">Active Students</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center bg-warning text-white">
+        <div class="card-body">
+          <h5 class="card-title">{{ premiumMembers }}</h5>
+          <p class="card-text">Premium Members</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center bg-info text-white">
+        <div class="card-body">
+          <h5 class="card-title">{{ basicMembers }}</h5>
+          <p class="card-text">Basic Members</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5>Filters & Search</h5>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-4">
+          <input type="text" 
+                 class="form-control" 
+                 placeholder="Search students..." 
+                 [(ngModel)]="searchTerm" 
+                 (input)="onSearchChange()">
+        </div>
+        <div class="col-md-2">
+          <select class="form-control" 
+                  [(ngModel)]="selectedDepartment" 
+                  (change)="onFilterChange()">
+            <option value="">All Departments</option>
+            <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-control" 
+                  [(ngModel)]="selectedMembership" 
+                  (change)="onFilterChange()">
+            <option value="">All Memberships</option>
+            <option *ngFor="let type of membershipTypes" [value]="type">{{ type | titlecase }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-control" 
+                  [(ngModel)]="selectedYear" 
+                  (change)="onFilterChange()">
+            <option value="">All Years</option>
+            <option *ngFor="let year of years" [value]="year">Year {{ year }}</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <div class="btn-group w-100">
+            <button class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
+            <button class="btn btn-primary" (click)="refreshData()">Refresh</button>
+            <button class="btn btn-success" (click)="exportToCSV()">Export</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Students Table -->
+  <div class="card">
+    <div class="card-header">
+      <h5>Registered Students ({{ filteredStudents.length }})</h5>
+    </div>
+    <div class="card-body">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="text-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading students...</p>
+      </div>
+
+      <!-- Students Table -->
+      <div *ngIf="!isLoading" class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Full Name</th>
+              <th>Phone</th>
+              <th>Student ID</th>
+              <th>Department</th>
+              <th>Year</th>
+              <th>Membership</th>
+              <th>Status</th>
+              <th>Bookings</th>
+              <th>Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let student of filteredStudents">
+              <td>{{ student.id }}</td>
+              <td>{{ student.username }}</td>
+              <td>{{ student.email }}</td>
+              <td>{{ student.first_name }} {{ student.last_name }}</td>
+              <td>{{ student.phone || '-' }}</td>
+              <td>{{ student.student_id || '-' }}</td>
+              <td>
+                <span *ngIf="student.department" class="badge bg-primary">{{ student.department }}</span>
+                <span *ngIf="!student.department">-</span>
+              </td>
+              <td>{{ student.year_of_study ? 'Year ' + student.year_of_study : '-' }}</td>
+              <td>
+                <span class="badge" 
+                      [style.background-color]="getMembershipTypeColor(student.membership_type)"
+                      style="color: white;">
+                  {{ student.membership_type | titlecase }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" 
+                      [style.background-color]="getMembershipStatusColor(student.membership_status)"
+                      style="color: white;">
+                  {{ student.membership_status }}
+                </span>
+              </td>
+              <td>{{ student.total_bookings || 0 }}</td>
+              <td>
+                <div class="form-check">
+                  <input class="form-check-input" 
+                         type="checkbox" 
+                         [checked]="student.is_active"
+                         (change)="toggleStudentStatus(student)">
+                </div>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary" 
+                          (click)="viewStudentDetails(student)"
+                          title="View Details">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button class="btn btn-outline-success" 
+                          (click)="upgradeMembership(student)"
+                          title="Upgrade Membership">
+                    <i class="bi bi-arrow-up-circle"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- No Data State -->
+        <div *ngIf="filteredStudents.length === 0" class="text-center py-5">
+          <i class="bi bi-people display-1 text-muted"></i>
+          <h5 class="text-muted mt-3">No students found</h5>
+          <p class="text-muted">Try adjusting your filters or search criteria</p>
+          <button class="btn btn-primary" (click)="clearFilters()">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -81,8 +81,12 @@ export class SignupComponent implements OnInit {
     this.loading = true;
     this.error = null;
     
-    // register() अब AuthService में मौजूद है
-    this.authService.register(this.signupForm.value).subscribe({
+    // Fix field name mismatch: password2 -> password_confirm
+    const formData = { ...this.signupForm.value };
+    formData.password_confirm = formData.password2;
+    delete formData.password2;
+    
+    this.authService.register(formData).subscribe({
       next: (res: AuthResponse) => {
         this.loading = false;
         

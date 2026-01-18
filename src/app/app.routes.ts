@@ -19,6 +19,7 @@ import { PaymentVerificationComponent } from './admin/payment-verification/payme
 import { NotificationsSenderComponent } from './admin/notifications-sender/notifications-sender.component';
 import { FeedbackComponent } from './admin/feedback/feedback.component';
 import { LeaderboardComponent } from './admin/leaderboard/leaderboard.component';
+import { StudentManagementComponent } from './admin/student-management/student-management.component';
 
 import { AuthGuard, AdminGuard, StudentGuard } from './guards/auth.guard';
 
@@ -49,6 +50,7 @@ export const routes: Routes = [
     component: AdminDashboardComponent,
     canActivate: [AuthGuard, AdminGuard],
     children: [
+      { path: 'student', component: StudentManagementComponent },
       { path: 'seats', component: SeatManagementComponent },
       { path: 'attendance', component: AttendancePanelComponent },
       { path: 'payments', component: PaymentVerificationComponent },

@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://backend-repo-two-ruby.vercel.app/api',
-  backendUrl: 'https://backend-repo-two-ruby.vercel.app'
+  apiUrl: 'https://backendrepo-5.onrender.com/api',
+  backendUrl: 'https://backendrepo-5.onrender.com'
 };

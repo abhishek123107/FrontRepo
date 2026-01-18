@@ -37,14 +37,23 @@ export class PaymentVerificationComponent implements OnInit {
     this.paymentService.getAllPayments().subscribe({
       next: (payments) => {
         this.payments = payments;
+        this.filteredPayments = [...payments];
         this.filterPayments();
         this.loading = false;
-        console.log('Payments loaded:', payments);
+        console.log('Payments loaded successfully:', payments.length, 'records');
       },
       error: (err) => {
-        this.error = 'Failed to load payments from server';
+        this.error = 'Failed to load payments. Please check your authentication and try again.';
         this.loading = false;
         console.error('Error loading payments:', err);
+        
+        if (err.status === 401) {
+          this.error = 'Authentication required. Please login again.';
+        } else if (err.status === 403) {
+          this.error = 'Admin access required to view payments.';
+        } else if (err.status === 0) {
+          this.error = 'Unable to connect to server. Please check if the backend is running.';
+        }
       }
     });
   }
@@ -58,13 +67,14 @@ export class PaymentVerificationComponent implements OnInit {
 
       let dateMatch = true;
       if (this.startDate) {
-        dateMatch =
-          dateMatch && new Date(payment.date) >= new Date(this.startDate);
+        const paymentDate = new Date(payment.date);
+        const startFilter = new Date(this.startDate);
+        dateMatch = dateMatch && paymentDate >= startFilter;
       }
       if (this.endDate) {
-        dateMatch =
-          dateMatch &&
-          new Date(payment.date) <= new Date(this.endDate + 'T23:59:59');
+        const paymentDate = new Date(payment.date);
+        const endFilter = new Date(this.endDate + 'T23:59:59');
+        dateMatch = dateMatch && paymentDate <= endFilter;
       }
 
       return statusMatch && methodMatch && dateMatch;
@@ -82,7 +92,17 @@ export class PaymentVerificationComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error approving payment:', err);
-          alert('Failed to approve payment. Please try again.');
+          let errorMessage = 'Failed to approve payment. Please try again.';
+          
+          if (err.status === 401) {
+            errorMessage = 'Authentication required. Please login again.';
+          } else if (err.status === 403) {
+            errorMessage = 'Admin access required to approve payments.';
+          } else if (err.status === 404) {
+            errorMessage = 'Payment not found.';
+          }
+          
+          alert(errorMessage);
         }
       });
     }
@@ -99,7 +119,17 @@ export class PaymentVerificationComponent implements OnInit {
         },
         error: (err) => {
           console.error('Error rejecting payment:', err);
-          alert('Failed to reject payment. Please try again.');
+          let errorMessage = 'Failed to reject payment. Please try again.';
+          
+          if (err.status === 401) {
+            errorMessage = 'Authentication required. Please login again.';
+          } else if (err.status === 403) {
+            errorMessage = 'Admin access required to reject payments.';
+          } else if (err.status === 404) {
+            errorMessage = 'Payment not found.';
+          }
+          
+          alert(errorMessage);
         }
       });
     }
