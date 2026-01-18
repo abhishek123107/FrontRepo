@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface Payment {
   id?: number;
@@ -32,8 +33,8 @@ interface PaginatedResponse {
   providedIn: 'root'
 })
 export class PaymentService {
-  // ध्यान दें: हमने URL को Django के URL Patterns के हिसाब से सेट किया है
-  private apiUrl = 'http://localhost:8001/api/payments/';
+  // Use environment.apiUrl + '/payments/'
+  private apiUrl = `${environment.apiUrl}/payments/`;
 
   constructor(private http: HttpClient) { }
 

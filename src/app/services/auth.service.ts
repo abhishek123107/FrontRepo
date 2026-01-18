@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 // Interface for User Data
 export interface User {
@@ -31,7 +32,7 @@ export interface AuthResponse {
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8001/api';
+  private apiUrl = environment.apiUrl;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -76,7 +77,7 @@ export class AuthService {
     }
   }
 
-  /** चेक करें कि क्या यूजर एडमिन (Staff) है */
+  
   isAdmin(): boolean {
     const user = this.getCurrentUser();
     // !! का मतलब है कि अगर वैल्यू null है तो false रिटर्न करो, वरना true

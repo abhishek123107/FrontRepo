@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Seat } from '../models/seat.model';
+import { environment } from '../../environments/environment';
 
 export interface SeatBooking {
   id?: number;
@@ -25,7 +26,7 @@ export interface SeatBooking {
   providedIn: 'root',
 })
 export class SeatBookingService {
-  private apiUrl = 'http://localhost:8001/api'; // Base API URL - updated to match Django server
+  private apiUrl = environment.apiUrl; // Base API URL from environment
 
   constructor(private http: HttpClient) {}
 
