@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError, catchError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface StudentProfile {
   id: number;
@@ -57,7 +58,7 @@ export interface StudentDashboard {
   providedIn: 'root'
 })
 export class StudentService {
-  private apiUrl = 'http://localhost:8001/api';
+  private apiUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
@@ -72,16 +73,39 @@ export class StudentService {
     });
   }
 
+  private handleError<T>(operation = 'operation') {
+    return (error: any): Observable<T> => {
+      console.error(`${operation} failed:`, error);
+      
+      if (error.status === 0) {
+        console.error('Connection refused - Backend server may not be running');
+      } else if (error.status === 401) {
+        console.error('Unauthorized - Token may be expired');
+        this.authService.logout();
+      } else if (error.status === 403) {
+        console.error('Forbidden - Insufficient permissions');
+      } else if (error.status === 404) {
+        console.error('Not found - Endpoint may not exist');
+      } else if (error.status >= 500) {
+        console.error('Server error - Backend issue');
+      }
+      
+      return throwError(() => error);
+    };
+  }
+
   // Get complete student dashboard data
   getStudentDashboard(): Observable<StudentDashboard> {
     const headers = this.getAuthHeaders();
-    return this.http.get<StudentDashboard>(`${this.apiUrl}/accounts/student/dashboard/`, { headers });
+    return this.http.get<StudentDashboard>(`${this.apiUrl}/accounts/student/dashboard/`, { headers })
+      .pipe(catchError(this.handleError<StudentDashboard>('getStudentDashboard')));
   }
 
   // Get student profile
   getStudentProfile(): Observable<StudentProfile> {
     const headers = this.getAuthHeaders();
-    return this.http.get<StudentProfile>(`${this.apiUrl}/accounts/student/profile/`, { headers });
+    return this.http.get<StudentProfile>(`${this.apiUrl}/accounts/student/profile/`, { headers })
+      .pipe(catchError(this.handleError<StudentProfile>('getStudentProfile')));
   }
 
   // Update student profile
@@ -93,13 +117,15 @@ export class StudentService {
   // Get student statistics
   getStudentStats(): Observable<StudentStats> {
     const headers = this.getAuthHeaders();
-    return this.http.get<StudentStats>(`${this.apiUrl}/accounts/student/stats/`, { headers });
+    return this.http.get<StudentStats>(`${this.apiUrl}/accounts/student/stats/`, { headers })
+      .pipe(catchError(this.handleError<StudentStats>('getStudentStats')));
   }
 
   // Get recent activities
   getRecentActivities(limit: number = 10): Observable<RecentActivity[]> {
     const headers = this.getAuthHeaders();
-    return this.http.get<RecentActivity[]>(`${this.apiUrl}/accounts/student/activities/?limit=${limit}`, { headers });
+    return this.http.get<RecentActivity[]>(`${this.apiUrl}/accounts/student/activities/?limit=${limit}`, { headers })
+      .pipe(catchError(this.handleError<RecentActivity[]>('getRecentActivities')));
   }
 
   // Get student bookings
