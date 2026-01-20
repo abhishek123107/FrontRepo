@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface PaymentRecord {
   id: number;
@@ -26,7 +27,7 @@ export interface PaymentRecord {
   providedIn: 'root'
 })
 export class PaymentVerificationService {
-  private baseUrl = 'http://localhost:8001/api/payments';
+  private baseUrl = `${environment.apiUrl}/payments`;
 
   constructor(
     private http: HttpClient,

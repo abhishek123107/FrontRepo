@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 export interface Student {
   id: number;
@@ -74,7 +75,7 @@ export class StudentManagementComponent implements OnInit {
       'Content-Type': 'application/json'
     };
 
-    this.http.get<Student[]>('http://localhost:8001/api/accounts/users/', { headers })
+    this.http.get<Student[]>(`${environment.apiUrl}/accounts/users/`, { headers })
       .subscribe({
         next: (data) => {
           // Filter to show only students (non-staff users)
@@ -99,7 +100,7 @@ export class StudentManagementComponent implements OnInit {
       'Content-Type': 'application/json'
     };
 
-    this.http.get<Student[]>('http://localhost:8001/api/accounts/users/', { headers })
+    this.http.get<Student[]>(`${environment.apiUrl}/accounts/users/`, { headers })
       .subscribe({
         next: (data) => {
           const students = data.filter(user => !user.is_staff && !user.is_superuser);
@@ -176,7 +177,7 @@ export class StudentManagementComponent implements OnInit {
 
     const newStatus = !student.is_active;
 
-    this.http.patch(`http://localhost:8001/api/accounts/users/${student.id}/`, 
+    this.http.patch(`${environment.apiUrl}/accounts/users/${student.id}/`, 
       { is_active: newStatus }, { headers })
       .subscribe({
         next: () => {
@@ -201,7 +202,7 @@ export class StudentManagementComponent implements OnInit {
 
     const newMembership = student.membership_type === 'basic' ? 'premium' : 'vip';
 
-    this.http.patch(`http://localhost:8001/api/accounts/users/${student.id}/`, 
+    this.http.patch(`${environment.apiUrl}/accounts/users/${student.id}/`, 
       { membership_type: newMembership }, { headers })
       .subscribe({
         next: () => {

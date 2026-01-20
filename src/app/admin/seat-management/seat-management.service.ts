@@ -3,12 +3,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Seat } from '../../models/seat.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SeatManagementService {
-  private baseUrl = 'http://localhost:8001/api/seats';
+  private baseUrl = `${environment.apiUrl}/seats`;
 
   constructor(private http: HttpClient) {}
 

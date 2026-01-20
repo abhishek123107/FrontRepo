@@ -4,6 +4,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 interface AttendanceRecord {
   id: number;
@@ -111,7 +112,7 @@ export class AttendancePanelComponent implements OnInit {
     
     const headers = this.getAuthHeaders();
     
-    this.http.post<QRCodeData>('http://localhost:8001/api/attendance/generate-qr/', {}, { headers })
+    this.http.post<QRCodeData>(`${environment.apiUrl}/attendance/generate-qr/`, {}, { headers })
       .subscribe({
         next: (response) => {
           this.qrCodeData = response;

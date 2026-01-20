@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
 import { AuthService, User } from '../../services/auth.service';
 import { Subscription } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 interface Activity {
   title: string;
@@ -106,7 +107,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   private loadDashboardData(): void {
     // Load bookings
     this.subscription.add(
-      this.http.get<any>('http://localhost:8001/api/bookings/').subscribe({
+      this.http.get<any>(`${environment.apiUrl}/bookings/`).subscribe({
         next: (response: any) => {
           // Handle paginated response
           const bookings = response.results || response;
@@ -125,7 +126,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     // Load attendance records
     this.subscription.add(
-      this.http.get<any>('http://localhost:8001/api/records/').subscribe({
+      this.http.get<any>(`${environment.apiUrl}/records/`).subscribe({
         next: (response: any) => {
           // Handle paginated response
           const records = response.results || response;

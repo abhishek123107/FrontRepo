@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Seat } from '../../models/seat.model';
 import { SeatManagementService } from './seat-management.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-seat-management',
@@ -144,7 +145,7 @@ export class SeatManagementComponent implements OnInit {
         return seat.photo;
       }
       // If photo is a relative path, construct full URL
-      return `http://localhost:8001${seat.photo}`;
+      return `${environment.backendUrl}${seat.photo}`;
     }
     // Default placeholder
     return `https://via.placeholder.com/400x300?text=Seat+${seat.number}`;

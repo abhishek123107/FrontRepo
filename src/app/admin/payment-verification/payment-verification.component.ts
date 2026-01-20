@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
 import { PaymentVerificationService, PaymentRecord } from './payment-verification.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-payment-verification',
@@ -197,7 +198,7 @@ export class PaymentVerificationComponent implements OnInit {
   getPaymentImageUrl(url: string): string {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    return `http://localhost:8001${url}`;
+    return `${environment.backendUrl}${url}`;
   }
 
   getStats(status: string): number {
