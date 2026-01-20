@@ -14,6 +14,7 @@ import {
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
+import { ErrorHandler } from '../../utils/error-handler';
 
 @Component({
   selector: 'app-login',
@@ -82,7 +83,7 @@ export class LoginComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.error?.detail || 'Login failed. Please try again.';
+        this.error = ErrorHandler.parseError(err);
         console.error('Login error:', err);
       },
     });

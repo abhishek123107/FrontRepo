@@ -8,6 +8,7 @@ import {
   SeatBookingService,
 } from '../../services/seat-booking.service';
 import { AuthService } from '../../services/auth.service';
+import { ErrorHandler } from '../../utils/error-handler';
 
 @Component({
   selector: 'app-seat-booking',
@@ -89,9 +90,6 @@ export class SeatBookingComponent implements OnInit {
         console.log('Loading completed, seats available:', this.seats.length);
       },
       error: (error) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e63252b9-4d6f-4a01-ba28-3ad21c918bd7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'seat-booking.component.ts:90',message:'getSeats error',data:{status:error?.status,statusText:error?.statusText,url:error?.url,message:error?.message,errorDetails:error?.error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         console.error('Backend error details:', error);
 
         // Check if it's an authentication error
@@ -188,7 +186,8 @@ export class SeatBookingComponent implements OnInit {
             alert('Please log in to book seats.');
             this.router.navigate(['/login']);
           } else {
-            alert('Booking failed. Please try again.');
+            const friendlyMessage = ErrorHandler.parseError(error);
+            alert(friendlyMessage || 'Booking failed. Please try again.');
           }
         },
       });
@@ -374,46 +373,19 @@ export class SeatBookingComponent implements OnInit {
         this.router.navigate(['/student/dashboard']);
       },
       error: (error) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e63252b9-4d6f-4a01-ba28-3ad21c918bd7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'seat-booking.component.ts:304',message:'bookSeatWithPayment error',data:{status:error?.status,statusText:error?.statusText,url:error?.url,message:error?.message,errorDetails:error?.error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         console.error('Booking failed:', error);
         this.loading = false;
         this.paymentFailed = true;
 
-        // Enhanced error handling with more specific messages
+        // Use ErrorHandler for user-friendly messages
         if (error.status === 401) {
-          this.paymentErrorMessage =
-            'Authentication failed. Please log in again.';
+          this.paymentErrorMessage = 'Authentication failed. Please log in again.';
           setTimeout(() => {
             this.router.navigate(['/login']);
           }, 2000);
-        } else if (error.status === 400) {
-          // Handle different types of validation errors
-          const errorDetail = error.error?.detail || error.error?.message || '';
-          if (errorDetail.toLowerCase().includes('screenshot')) {
-            this.paymentErrorMessage = 'Payment screenshot validation failed. Please ensure the image is clear and shows complete transaction details.';
-          } else if (errorDetail.toLowerCase().includes('seat')) {
-            this.paymentErrorMessage = 'Selected seat is not available. Please choose another seat.';
-          } else if (errorDetail.toLowerCase().includes('time')) {
-            this.paymentErrorMessage = 'Invalid timing selection. Please check your booking times.';
-          } else {
-            this.paymentErrorMessage = errorDetail || 'Invalid booking details. Please check your information and try again.';
-          }
-        } else if (error.status === 409) {
-          this.paymentErrorMessage =
-            'Seat is no longer available or time slot is already booked. Please select another seat or time.';
-        } else if (error.status === 413) {
-          this.paymentErrorMessage = 'File is too large. Please choose a smaller image (max 5MB).';
-        } else if (error.status === 415) {
-          this.paymentErrorMessage = 'Unsupported file type. Please upload a valid image file.';
-        } else if (error.status >= 500) {
-          this.paymentErrorMessage = 'Server error occurred. Please try again in a few moments.';
         } else {
-          this.paymentErrorMessage =
-            error.error?.message ||
-            error.message ||
-            'Payment processing failed. Please check your internet connection and try again.';
+          // Use the ErrorHandler to get user-friendly message
+          this.paymentErrorMessage = ErrorHandler.parseError(error);
         }
       },
     });

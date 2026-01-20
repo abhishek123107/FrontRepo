@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { ErrorHandler } from '../utils/error-handler';
 
 // Interface for User Data
 export interface User {
@@ -46,7 +47,10 @@ export class AuthService {
       .post<AuthResponse>(`${this.apiUrl}/accounts/register/`, data)
       .pipe(
         tap((res) => this.setSession(res)),
-        catchError((err) => throwError(() => err))
+        catchError((err) => {
+          const friendlyError = ErrorHandler.parseError(err);
+          return throwError(() => new Error(friendlyError));
+        })
       );
   }
 
@@ -59,7 +63,10 @@ export class AuthService {
       .post<AuthResponse>(`${this.apiUrl}/accounts/login/`, data)
       .pipe(
         tap((res) => this.setSession(res)),
-        catchError((err) => throwError(() => err))
+        catchError((err) => {
+          const friendlyError = ErrorHandler.parseError(err);
+          return throwError(() => new Error(friendlyError));
+        })
       );
   }
 

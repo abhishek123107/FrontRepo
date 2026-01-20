@@ -3,6 +3,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router, RouterLink, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthResponse, AuthService } from '../../services/auth.service';
+import { ErrorHandler } from '../../utils/error-handler';
 
 @Component({
   selector: 'app-signup',
@@ -101,7 +102,7 @@ export class SignupComponent implements OnInit {
       },
       error: (err: any) => {
         this.loading = false;
-        this.error = err?.message || 'Signup failed. Please try again.';
+        this.error = ErrorHandler.parseError(err);
         console.error('Signup error:', err);
       }
     });
