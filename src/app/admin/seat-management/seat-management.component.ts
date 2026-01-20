@@ -148,12 +148,12 @@ export class SeatManagementComponent implements OnInit {
       return `${environment.backendUrl}${seat.photo}`;
     }
     // Default placeholder
-    return `https://via.placeholder.com/400x300?text=Seat+${seat.number}`;
+    return `https://picsum.photos/400/300?random=${seat.number}`;
   }
 
   // Handle image loading errors
   onImageError(event: any, seat: Seat) {
     console.warn(`Failed to load image for seat ${seat.number}, using placeholder`);
-    event.target.src = `https://via.placeholder.com/400x300?text=Seat+${seat.number}`;
+    event.target.src = `https://picsum.photos/400/300?random=${seat.number}`;
   }
 }
