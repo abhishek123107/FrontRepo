@@ -15,6 +15,11 @@ export interface AttendanceRecord {
   seat_booking?: number;
   verified_by_qr?: boolean;
   verification_method?: string;
+  scan_confidence?: number;
+  scanned_qr_token?: string;
+  scanned_at?: string;
+  scan_location?: string;
+  device_info?: any;
   created_at?: string;
   updated_at?: string;
 }
@@ -36,6 +41,30 @@ export interface AttendanceSession {
   created_at?: string;
   qr_code_data?: string;
   qr_code_token?: string;
+}
+
+export interface QRScanResult {
+  success: boolean;
+  qr_data?: string;
+  confidence?: number;
+  position?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  quality?: number;
+  error?: string;
+}
+
+export interface AttendanceScanResult {
+  success: boolean;
+  message?: string;
+  record?: AttendanceRecord;
+  session?: string;
+  check_in_time?: string;
+  status?: string;
+  error?: string;
 }
 
 @Injectable({
@@ -81,5 +110,60 @@ export class AttendanceService {
   /** Generate attendance report */
   getAttendanceReport(params: any): Observable<any> {
     return this.http.get(`${this.apiUrl}/attendance/report/`, { params });
+  }
+
+  /** Scan QR code from image */
+  scanQRFromImage(imageFile: File): Observable<QRScanResult> {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+    return this.http.post<QRScanResult>(`${this.apiUrl}/attendance/scan-qr-image/`, formData);
+  }
+
+  /** Process QR code scan for attendance */
+  processAttendanceScan(qrData: string, location?: string, deviceInfo?: any): Observable<AttendanceScanResult> {
+    const body = {
+      qr_data: qrData,
+      location: location || 'Unknown',
+      device_info: deviceInfo || {}
+    };
+    return this.http.post<AttendanceScanResult>(`${this.apiUrl}/attendance/process-scan/`, body);
+  }
+
+  /** Get device information for scanning */
+  getDeviceInfo(): any {
+    return {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language,
+      timestamp: new Date().toISOString(),
+      screen: {
+        width: window.screen.width,
+        height: window.screen.height
+      }
+    };
+  }
+
+  /** Get current location (if available) */
+  getCurrentLocation(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        resolve('Location not available');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve(`${position.coords.latitude}, ${position.coords.longitude}`);
+        },
+        (error) => {
+          resolve('Location access denied');
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    });
   }
 }

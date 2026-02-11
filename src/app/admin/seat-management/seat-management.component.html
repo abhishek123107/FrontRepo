@@ -28,24 +28,30 @@
     </div>
     
     <div *ngFor="let seat of seats" class="col-md-3 col-sm-6 mb-4">
-      <div class="card h-100">
+      <div class="card h-100 seat-card">
         <img
           [src]="getSeatPhoto(seat)"
           class="card-img-top"
-          alt="Seat {{ seat.number }}"
+          alt="Seat {{ seat.seat_number }}"
           style="height: 200px; object-fit: cover"
           (error)="onImageError($event, seat)"
         />
         <div class="card-body">
-          <h5 class="card-title">Seat {{ seat.number }}</h5>
+          <h5 class="card-title seat-number">Seat {{ seat.seat_number }}</h5>
           <p class="card-text">
             <span
               class="badge"
               [class.bg-success]="seat.status === 'available'"
-              [class.bg-danger]="seat.status === 'booked'"
               [class.bg-warning]="seat.status === 'maintenance'"
+              [class.bg-danger]="seat.status === 'occupied'"
             >
               {{ seat.status }}
+            </span>
+            <span 
+              *ngIf="seat.time_slot" 
+              class="badge bg-info ms-2 time-slot-badge"
+            >
+              {{ getTimeSlotName(seat.time_slot) }}
             </span>
           </p>
           <div class="btn-group w-100">
@@ -97,15 +103,31 @@
                 <div class="mb-3">
                   <label class="form-label">Seat Number *</label>
                   <input
-                    type="number"
+                    type="text"
                     class="form-control"
-                    name="number"
+                    name="seat_number"
                     ngModel
                     required
-                    [(ngModel)]="currentSeat.number"
-                    placeholder="Enter seat number"
+                    [(ngModel)]="currentSeat.seat_number"
+                    placeholder="Enter seat number (e.g., A001)"
                     [disabled]="loading"
                   />
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Time Slot *</label>
+                  <select
+                    class="form-select"
+                    name="time_slot"
+                    ngModel
+                    required
+                    [(ngModel)]="currentSeat.time_slot"
+                    [disabled]="loading"
+                  >
+                    <option *ngFor="let slot of timeSlots" [value]="slot.id">
+                      {{ slot.name }} - {{ slot.price }}
+                    </option>
+                  </select>
+                  <small class="text-muted">Select the time slot for this seat</small>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Status *</label>
@@ -118,7 +140,7 @@
                     [disabled]="loading"
                   >
                     <option value="available">Available</option>
-                    <option value="booked">Booked</option>
+                    <option value="occupied">Occupied</option>
                     <option value="maintenance">Maintenance</option>
                   </select>
                 </div>

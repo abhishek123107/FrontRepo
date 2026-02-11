@@ -14,7 +14,7 @@
                   {{ studentProfile.first_name }} {{ studentProfile.last_name }}
                 </span>
                 <span class="badge" [class]="getMembershipBadgeClass(studentProfile.membership_type || 'basic')" *ngIf="studentProfile">
-                  {{ studentProfile.membership_type?.toUpperCase() }}
+                  {{ studentProfile.membership_type.toUpperCase() }}
                 </span>
                 <span class="badge bg-success" *ngIf="studentProfile?.student_id">
                   ID: {{ studentProfile?.student_id }}
@@ -117,25 +117,21 @@
           <ul class="list-group list-group-flush">
             <!-- Notifications from Admin -->
             <li class="list-group-item">
-              <a
-                [routerLink]="['notifications']"
-                routerLinkActive="active"
-                class="btn btn-outline-warning w-100"
-                ><i class="fas fa-bell me-2"></i>Notifications</a
-              >
+              <a [routerLink]="['notifications']" routerLinkActive="active" class="btn btn-outline-primary w-100">
+                <i class="fas fa-bell me-2"></i>Notifications from Admin
+              </a>
             </li>
+          </ul>
+        </div>
+      </div>
 
-            <!-- Send Notifications (if allowed) -->
-            <li class="list-group-item">
-              <a
-                routerLink="/admin/notifications"
-                routerLinkActive="active"
-                class="btn btn-outline-danger w-100"
-                *ngIf="isAdmin()"
-                ><i class="fas fa-paper-plane me-2"></i>Send Notifications</a
-              >
-            </li>
-
+      <!-- Quick Stats -->
+      <div class="card mt-3">
+        <div class="card-header bg-warning text-white">
+          <h5>📊 Quick Stats</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
             <!-- Feedback Analysis -->
             <li class="list-group-item">
               <a
@@ -217,7 +213,7 @@
                   </div>
                   <h6 class="mt-2">{{ studentProfile.first_name }} {{ studentProfile.last_name }}</h6>
                   <span class="badge" [class]="getMembershipBadgeClass(studentProfile.membership_type || 'basic')">
-                    {{ studentProfile.membership_type?.toUpperCase() }}
+                    {{ studentProfile.membership_type.toUpperCase() }}
                   </span>
                 </div>
               </div>

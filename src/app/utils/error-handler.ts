@@ -9,6 +9,17 @@ export class ErrorHandler {
    * Parse backend API errors and return user-friendly messages
    */
   static parseError(error: any): string {
+    // Handle network / connection errors (Angular HttpErrorResponse often has status 0)
+    if (error?.status === 0) {
+      return 'Network error. Please check your internet connection and try again.';
+    }
+
+    // Handle browser-level ProgressEvent/ErrorEvent (can surface as { isTrusted: true })
+    const raw = error?.error;
+    if (raw && (raw.type === 'error' || raw.type === 'load' || raw.isTrusted === true)) {
+      return 'Network error. Please check your internet connection and try again.';
+    }
+
     // Handle different error structures
     if (typeof error === 'string') {
       return error;

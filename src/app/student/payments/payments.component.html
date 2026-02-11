@@ -88,9 +88,13 @@
                 required
               >
                 <option value="">Select Payment Type</option>
-                <option value="Membership Fee">Membership Fee</option>
+                <option value="Morning Shift">🌅 Morning Shift - ₹300/month</option>
+                <option value="Afternoon Shift">☀️ Afternoon Shift - ₹350/month</option>
+                <option value="Evening Shift">🌆 Evening Shift - ₹300/month</option>
+                <option value="Full Day">📅 Full Day - ₹500/month</option>
+                <option value="Night Shift">🌙 Night Shift - ₹350/month</option>
+                <option value="24/7 Access">🌙 24/7 Access - ₹800/month</option>
                 <option value="Late Fine">Late Fee / Fine</option>
-                <option value="Seat Booking">Seat Booking</option>
               </select>
             </div>
             <div class="col-md-6">
@@ -99,8 +103,12 @@
                 type="number"
                 class="form-control"
                 formControlName="amount"
+                [readonly]="isPredefinedPayment()"
                 required
               />
+              <small *ngIf="isPredefinedPayment()" class="text-muted">
+                Amount auto-filled based on payment type
+              </small>
             </div>
           </div>
           <button

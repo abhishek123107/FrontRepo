@@ -10,7 +10,7 @@ export interface PaymentRecord {
   username: string;
   user_email: string;
   description: string;
-  amount: number;
+  amount: number | string; // Can be number or formatted string
   method: 'online' | 'offline';
   status: 'pending' | 'paid' | 'rejected';
   transaction_id?: string;

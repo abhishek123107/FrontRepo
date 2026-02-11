@@ -213,9 +213,7 @@
                   id="password2"
                   formControlName="password2"
                   placeholder="Confirm your password"
-                  [class.is-invalid]="
-                    password2?.invalid && password2?.touched
-                  "
+                  [class.is-invalid]="password2?.invalid && password2?.touched"
                 />
                 <div
                   *ngIf="password2?.invalid && password2?.touched"
@@ -227,6 +225,50 @@
                   <span *ngIf="password2?.errors?.['mismatch']"
                     >Passwords do not match</span
                   >
+                </div>
+              </div>
+            </div>
+
+            <!-- Address Section -->
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="address" class="form-label">
+                  <i class="fas fa-map-marker-alt me-1"></i>Address *
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="address"
+                  formControlName="address"
+                  placeholder="Enter your address"
+                  [class.is-invalid]="address?.invalid && address?.touched"
+                />
+                <div
+                  *ngIf="address?.invalid && address?.touched"
+                  class="invalid-feedback"
+                >
+                  Address is required
+                </div>
+              </div>
+
+              <!-- Document Upload Section -->
+              <div class="col-md-6 mb-3">
+                <label for="document" class="form-label">
+                  <i class="fas fa-file-upload me-1"></i>Upload Identity Document *
+                </label>
+                <input
+                  type="file"
+                  class="form-control"
+                  id="document"
+                  formControlName="document"
+                  [class.is-invalid]="document?.invalid && document?.touched"
+                  (change)="onFileSelect($event)"
+                />
+                <div
+                  *ngIf="document?.invalid && document?.touched"
+                  class="invalid-feedback"
+                >
+                  Please upload a valid document
                 </div>
               </div>
             </div>

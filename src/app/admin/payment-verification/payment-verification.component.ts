@@ -83,7 +83,8 @@ export class PaymentVerificationComponent implements OnInit {
   }
 
   approvePayment(payment: PaymentRecord) {
-    if (confirm(`Are you sure you want to approve payment of ₹${payment.amount} from ${payment.username}?`)) {
+    const displayAmount = typeof payment.amount === 'number' ? payment.amount : parseFloat(payment.amount.toString().replace(/[^\d.-]/g, ''));
+    if (confirm(`Are you sure you want to approve payment of ₹${displayAmount} from ${payment.username}?`)) {
       this.paymentService.approvePayment(payment.id).subscribe({
         next: () => {
           payment.status = 'paid';
@@ -205,16 +206,31 @@ export class PaymentVerificationComponent implements OnInit {
     return this.payments.filter((payment) => payment.status === status).length;
   }
 
+  getDisplayAmount(amount: number | string): string {
+    if (typeof amount === 'number') {
+      return amount.toString();
+    }
+    // Parse the amount string and extract the numeric value
+    const numericAmount = parseFloat(amount.toString().replace(/[^\d.-]/g, ''));
+    return isNaN(numericAmount) ? '0' : numericAmount.toString();
+  }
+
   getTotalAmount(): number {
     return this.payments
       .filter((payment) => payment.status === 'paid')
-      .reduce((total, payment) => total + payment.amount, 0);
+      .reduce((total, payment) => {
+        const amount = typeof payment.amount === 'number' ? payment.amount : parseFloat(payment.amount.toString().replace(/[^\d.-]/g, ''));
+        return total + (isNaN(amount) ? 0 : amount);
+      }, 0);
   }
 
   getPendingAmount(): number {
     return this.payments
       .filter((payment) => payment.status === 'pending')
-      .reduce((total, payment) => total + payment.amount, 0);
+      .reduce((total, payment) => {
+        const amount = typeof payment.amount === 'number' ? payment.amount : parseFloat(payment.amount.toString().replace(/[^\d.-]/g, ''));
+        return total + (isNaN(amount) ? 0 : amount);
+      }, 0);
   }
 
   onFiltersChanged() {

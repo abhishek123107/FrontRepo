@@ -75,11 +75,25 @@ export class StudentManagementComponent implements OnInit {
       'Content-Type': 'application/json'
     };
 
-    this.http.get<Student[]>(`${environment.apiUrl}/accounts/users/`, { headers })
+    this.http.get<any>(`${environment.apiUrl}/accounts/users/`, { headers })
       .subscribe({
-        next: (data) => {
+        next: (response) => {
+          console.log('Raw API response:', response);
+          
+          // Handle different response formats
+          let users: Student[] = [];
+          if (Array.isArray(response)) {
+            users = response;
+          } else if (response && (response as any).results && Array.isArray((response as any).results)) {
+            users = (response as any).results;
+          } else if (response && (response as any).data && Array.isArray((response as any).data)) {
+            users = (response as any).data;
+          }
+          
+          console.log('Processed users array:', users);
+          
           // Filter to show only students (non-staff users)
-          this.students = data.filter(user => !user.is_staff && !user.is_superuser);
+          this.students = users.filter(user => !user.is_staff && !user.is_superuser);
           this.filteredStudents = [...this.students];
           this.applyFilters();
           this.isLoading = false;
@@ -100,10 +114,22 @@ export class StudentManagementComponent implements OnInit {
       'Content-Type': 'application/json'
     };
 
-    this.http.get<Student[]>(`${environment.apiUrl}/accounts/users/`, { headers })
+    this.http.get<any>(`${environment.apiUrl}/accounts/users/`, { headers })
       .subscribe({
-        next: (data) => {
-          const students = data.filter(user => !user.is_staff && !user.is_superuser);
+        next: (response) => {
+          console.log('Raw API response for statistics:', response);
+          
+          // Handle different response formats
+          let users: Student[] = [];
+          if (Array.isArray(response)) {
+            users = response;
+          } else if (response && (response as any).results && Array.isArray((response as any).results)) {
+            users = (response as any).results;
+          } else if (response && (response as any).data && Array.isArray((response as any).data)) {
+            users = (response as any).data;
+          }
+          
+          const students = users.filter(user => !user.is_staff && !user.is_superuser);
           
           this.totalStudents = students.length;
           this.activeStudents = students.filter(s => s.is_active).length;
@@ -282,5 +308,94 @@ export class StudentManagementComponent implements OnInit {
       case 'vip': return '#ff9800';
       default: return '#757575';
     }
+  }
+
+  // Helper methods for enhanced functionality
+  hasActiveFilters(): boolean {
+    return !!(this.searchTerm || this.selectedDepartment || this.selectedMembership || this.selectedYear);
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  }
+
+  editStudent(student: Student): void {
+    // For now, just log the edit action
+    console.log('Edit student:', student);
+    alert(`Edit functionality for ${student.first_name} ${student.last_name} will be implemented soon.`);
+  }
+
+  deleteStudent(student: Student): void {
+    // Confirm deletion
+    const confirmDelete = confirm(
+      `Are you sure you want to delete ${student.first_name} ${student.last_name}?\n\n` +
+      `This action cannot be undone and will permanently remove:\n` +
+      `- Student account\n` +
+      `- All booking records\n` +
+      `- Payment history\n` +
+      `- Attendance data\n\n` +
+      `Student ID: ${student.student_id || 'N/A'}\n` +
+      `Email: ${student.email}`
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error('No authentication token found');
+      alert('Authentication required. Please log in again.');
+      return;
+    }
+
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    // Show loading state
+    this.isLoading = true;
+
+    this.http.delete(`${environment.apiUrl}/accounts/users/${student.id}/`, { headers })
+      .subscribe({
+        next: () => {
+          console.log(`Student ${student.first_name} ${student.last_name} deleted successfully`);
+          
+          // Remove student from local arrays
+          this.students = this.students.filter(s => s.id !== student.id);
+          this.filteredStudents = this.filteredStudents.filter(s => s.id !== student.id);
+          
+          // Update statistics
+          this.loadStatistics();
+          
+          // Show success message
+          alert(`Student ${student.first_name} ${student.last_name} has been deleted successfully.`);
+          
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error deleting student:', error);
+          
+          let errorMessage = 'Failed to delete student. Please try again.';
+          
+          if (error.status === 404) {
+            errorMessage = 'Student not found. The student may have already been deleted.';
+          } else if (error.status === 403) {
+            errorMessage = 'Permission denied. You do not have rights to delete this student.';
+          } else if (error.status === 500) {
+            errorMessage = 'Server error. Please contact the administrator.';
+          }
+          
+          alert(errorMessage);
+          this.isLoading = false;
+        }
+      });
   }
 }

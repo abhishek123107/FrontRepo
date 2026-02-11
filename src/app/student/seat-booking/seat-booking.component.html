@@ -4,25 +4,61 @@
   <div class="row">
     <!-- LEFT SECTION -->
     <div class="col-md-8">
+      <!-- Timing Section Selection -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5>⏰ Select Your Time Slot</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div 
+              *ngFor="let section of timingSections" 
+              class="col-md-6 col-lg-4 mb-3"
+            >
+              <div 
+                class="card timing-card"
+                [class.active]="selectedTimingSection === section.id"
+                (click)="selectTimingSection(section.id)"
+                style="cursor: pointer; transition: all 0.3s ease;"
+              >
+                <div class="card-body text-center">
+                  <h6 class="card-title">{{ section.name }}</h6>
+                  <p class="card-text">
+                    <small class="text-muted">{{ section.time }}</small><br>
+                    <strong class="text-primary">{{ section.price }}</strong>
+                  </p>
+                  <div 
+                    *ngIf="selectedTimingSection === section.id" 
+                    class="badge bg-success"
+                  >
+                    <i class="fas fa-check"></i> Selected
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Seat Selection -->
       <div class="card mb-4">
         <div class="card-header">
-          <h5>Select Your Seat</h5>
+          <h5>Select Your Seat - {{ selectedTimingSectionName }}</h5>
         </div>
         <div class="card-body">
           <div class="mb-3 d-flex justify-content-between align-items-center">
             <small class="text-muted">
               <span *ngIf="loadingSeats">Loading seats...</span>
-              <span *ngIf="!loadingSeats">Total Seats: {{ seats.length }}</span>
+              <span *ngIf="!loadingSeats">Available Seats: {{ getSeatsForCurrentTiming().length }}</span>
               <span
-                *ngIf="!loadingSeats && seats.length === 0"
+                *ngIf="!loadingSeats && getSeatsForCurrentTiming().length === 0"
                 class="text-danger"
-                >No seats found!</span
+                >No seats available for this time slot!</span
               >
             </small>
             <small
               class="text-success"
-              *ngIf="!loadingSeats && seats.length > 0"
+              *ngIf="!loadingSeats && getSeatsForCurrentTiming().length > 0"
             >
               <i class="fas fa-check-circle"></i> Seats loaded successfully
             </small>
@@ -41,54 +77,44 @@
           </div>
 
           <!-- Seat Grid -->
-          <div class="seat-grid" *ngIf="seats.length > 0">
+          <div class="seat-grid" *ngIf="getSeatsForCurrentTiming().length > 0">
             <div
-              *ngFor="let seat of seats; trackBy: trackBySeatId"
+              *ngFor="let seat of getSeatsForCurrentTiming(); trackBy: trackBySeatId"
               class="seat-item"
             >
               <button
                 class="btn seat-btn"
                 [class.available]="seat.status === 'available'"
-                [class.booked]="seat.status === 'booked'"
+                [class.occupied]="seat.status === 'occupied'"
                 [class.maintenance]="seat.status === 'maintenance'"
                 [class.selected]="seat.selected"
                 [disabled]="
-                  seat.status === 'booked' || seat.status === 'maintenance'
+                  seat.status === 'occupied' || seat.status === 'maintenance'
                 "
                 (click)="selectSeat(seat)"
-                [title]="'Seat ' + seat.number + ' - ' + seat.status"
+                [title]="'Seat ' + seat.seat_number + ' - ' + seat.status"
               >
-                {{ seat.number }}
+                {{ seat.seat_number }}
               </button>
             </div>
           </div>
 
           <!-- Fallback message if no seats -->
           <div
-            *ngIf="!loadingSeats && seats.length === 0"
+            *ngIf="!loadingSeats && getSeatsForCurrentTiming().length === 0"
             class="text-center py-5"
           >
             <div class="alert alert-warning">
               <h5>
                 <i class="fas fa-exclamation-triangle"></i> No Seats Available
               </h5>
-              <p>Please contact the library administrator to add seats.</p>
+              <p>No seats available for {{ selectedTimingSectionName }}. Please select a different time slot.</p>
             </div>
           </div>
           <div *ngIf="loadingSeats" class="text-center mt-4">
             <div class="alert alert-info">
               <i class="fas fa-spinner fa-spin"></i>
               Loading seats... Please wait.
-            </div>
-          </div>
-          <div
-            *ngIf="!loadingSeats && seats.length === 0"
-            class="text-center mt-4"
-          >
-            <div class="alert alert-warning">
-              <i class="fas fa-exclamation-triangle"></i>
-              No seats available. Please check your internet connection or
-              contact administrator.
             </div>
           </div>
         </div>
@@ -127,30 +153,78 @@
               <label>Selected Seat</label>
               <input
                 class="form-control"
-                [value]="selectedSeat?.number || 'None'"
+                [value]="selectedSeat?.seat_number || 'None'"
                 readonly
               />
+            </div>
+
+            <!-- Auto-selection Indicator -->
+            <div class="mb-3" *ngIf="bookingFormData.timing && bookingFormData.purpose">
+              <div class="alert alert-info alert-sm">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Auto-selected:</strong> {{ selectedTimingSectionName }} shift and matching membership plan
+              </div>
+            </div>
+
+            <!-- Time Slot List -->
+            <div class="card mb-4">
+              <div class="card-body">
+                <!-- Time slots list will be populated here -->
+                <div *ngIf="timeSlots.length > 0" class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Available Seats</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let slot of timeSlots">
+                        <td>{{ slot.start_time | date : "short" }}</td>
+                        <td>{{ slot.end_time | date : "short" }}</td>
+                        <td>{{ slot.available_seats }}</td>
+                        <td>
+                          <button class="btn btn-sm btn-outline-danger" (click)="deleteTimeSlot(slot.id)">
+                            <i class="bi bi-trash"></i> Delete
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div *ngIf="timeSlots.length === 0" class="text-center py-5">
+                  <p class="text-muted">No time slots configured. Add time slots to manage seat availability.</p>
+                </div>
+              </div>
             </div>
 
             <!-- Timing -->
             <div class="mb-3">
               <label>Timing Slot</label>
-              <select class="form-select" name="timing" ngModel required>
+              <select class="form-select" name="timing" [(ngModel)]="bookingFormData.timing" required>
                 <option value="">Select</option>
-                <option value="morning">Morning</option>
-                <option value="evening">Evening</option>
-                <option value="full-day">Full Day</option>
+                <option value="morning">🌅 Morning Shift</option>
+                <option value="afternoon">☀️ Afternoon Shift</option>
+                <option value="evening">🌆 Evening Shift</option>
+                <option value="full-day">📅 Full Day</option>
+                <option value="night">🌙 Night Shift</option>
+                <option value="24-7">🌙 24/7 Access</option>
               </select>
             </div>
 
             <!-- Plan -->
             <div class="mb-3">
               <label>Membership Plan</label>
-              <select class="form-select" name="purpose" ngModel required>
+              <select class="form-select" name="purpose" [(ngModel)]="bookingFormData.purpose" required>
                 <option value="">Select</option>
-                <option value="hourly">Hourly - ₹10/hour</option>
-                <option value="daily">Daily - ₹50/day</option>
-                <option value="monthly">Monthly - ₹500/month</option>
+                <option value="morning">🌅 Morning ₹300</option>
+                <option value="afternoon">☀️ Afternoon ₹350</option>
+                <option value="evening">🌆 Evening ₹300</option>
+                <option value="full-day">📅 Full Day ₹500</option>
+                <option value="night">🌙 Night ₹350</option>
+                <option value="24-7">🌙 24/7 ₹800</option>
               </select>
             </div>
 

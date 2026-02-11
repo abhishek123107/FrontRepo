@@ -49,22 +49,37 @@
           <div class="mb-4">
             <h6>Scan QR Code</h6>
             <p class="text-muted">
-              Mark attendance by scanning the QR code
+              Mark attendance by scanning QR code
             </p>
-            <div class="input-group mb-2">
-              <input
-                type="text"
-                class="form-control"
-                placeholder="Enter QR code token"
-                [(ngModel)]="qrCodeInput"
-                name="qrCodeInput">
+            <div class="d-grid gap-2">
               <button
                 class="btn btn-primary"
-                (click)="scanQRCode()"
+                (click)="openCameraScanner()"
                 [disabled]="loading">
-                <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
-                Submit QR Code
+                <i class="fas fa-camera me-2"></i>
+                📷 Scan QR Code
               </button>
+              <button
+                class="btn btn-outline-primary"
+                (click)="openFileUpload()"
+                [disabled]="loading">
+                <i class="fas fa-upload me-2"></i>
+                � Upload QR Code
+              </button>
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  placeholder="Enter QR code token"
+                  [(ngModel)]="qrCodeInput"
+                  name="qrCodeInput">
+                <button
+                  class="btn btn-outline-primary"
+                  (click)="scanQRCode()"
+                  [disabled]="loading">
+                  Submit
+                </button>
+              </div>
             </div>
           </div>
 
@@ -142,4 +157,195 @@
       </div>
     </div>
   </div>
+
+  <!-- QR Scanner Modal -->
+  <div class="modal fade" [class.show]="scannerOpen" [style.display]="scannerOpen ? 'block' : 'none'" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">📷 QR Code Scanner</h5>
+          <button type="button" class="btn-close" (click)="closeScanner()"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div *ngIf="loading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Scanning...</span>
+            </div>
+            <p class="mt-2">Processing QR Code...</p>
+          </div>
+
+          <div *ngIf="!loading && !scanResult">
+            <div class="mb-3">
+              <i class="fas fa-qrcode fa-5x text-primary mb-3"></i>
+              <h5>Upload QR Code Image</h5>
+              <p class="text-muted">Select an image containing the QR code</p>
+            </div>
+            <div class="mb-3">
+              <input
+                type="file"
+                class="form-control"
+                accept="image/*"
+                (change)="onFileSelect($event)"
+                #fileInput>
+            </div>
+            <small class="text-muted">
+              Supported formats: JPG, PNG, GIF<br>
+              Maximum file size: 5MB
+            </small>
+          </div>
+
+          <div *ngIf="scanResult && !attendanceResult" class="mb-3">
+            <div class="alert" [class.alert-success]="scanResult.success" [class.alert-danger]="!scanResult.success">
+              <h6>Scan Result</h6>
+              <p><strong>Success:</strong> {{ scanResult.success }}</p>
+              <p *ngIf="scanResult.qr_data"><strong>QR Data:</strong> {{ scanResult.qr_data }}</p>
+              <p *ngIf="scanResult.confidence"><strong>Confidence:</strong> {{ (scanResult.confidence * 100).toFixed(1) }}%</p>
+              <p *ngIf="scanResult.error"><strong>Error:</strong> {{ scanResult.error }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="attendanceResult" class="mb-3">
+            <div class="alert" [class.alert-success]="attendanceResult.success" [class.alert-danger]="!attendanceResult.success">
+              <h6>Attendance Result</h6>
+              <p *ngIf="attendanceResult.message"><strong>Message:</strong> {{ attendanceResult.message }}</p>
+              <p *ngIf="attendanceResult.session"><strong>Session:</strong> {{ attendanceResult.session }}</p>
+              <p *ngIf="attendanceResult.check_in_time"><strong>Check-in:</strong> {{ attendanceResult.check_in_time | date:'medium' }}</p>
+              <p *ngIf="attendanceResult.status"><strong>Status:</strong> {{ attendanceResult.status }}</p>
+              <p *ngIf="attendanceResult.error"><strong>Error:</strong> {{ attendanceResult.error }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeScanner()">Close</button>
+          <button *ngIf="selectedFile && !scanResult" type="button" class="btn btn-primary" (click)="scanQRFromFile()" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+            Scan QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera Scanner Modal -->
+  <div class="modal fade" [class.show]="cameraScannerOpen" *ngIf="cameraScannerOpen" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-camera me-2"></i>Scan QR Code
+          </h5>
+          <button type="button" class="btn-close" (click)="closeCameraScanner()"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div *ngIf="!cameraStream">
+            <div class="mb-3">
+              <i class="fas fa-camera fa-3x text-primary mb-3"></i>
+              <h5>Camera Access Required</h5>
+              <p class="text-muted">Please allow camera access to scan QR codes</p>
+            </div>
+            <button class="btn btn-primary" (click)="startCamera()" [disabled]="loading">
+              <i class="fas fa-video me-2"></i>
+              Start Camera
+            </button>
+          </div>
+          
+          <div *ngIf="cameraStream">
+            <div class="mb-3">
+              <video #videoElement class="camera-video" autoplay playsinline></video>
+              <canvas #canvasElement class="d-none"></canvas>
+            </div>
+            <div class="mb-3">
+              <p class="text-muted">Position QR code within the frame to scan</p>
+            </div>
+            <button class="btn btn-success" (click)="captureAndScan()" [disabled]="loading">
+              <i class="fas fa-qrcode me-2"></i>
+              <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+              {{ loading ? 'Scanning...' : 'Capture & Scan' }}
+            </button>
+            <button class="btn btn-outline-secondary ms-2" (click)="stopCamera()">
+              <i class="fas fa-stop me-2"></i>
+              Stop Camera
+            </button>
+          </div>
+          
+          <div *ngIf="scanResult" class="mt-3">
+            <div class="alert" [class.alert-success]="scanResult.success" [class.alert-danger]="!scanResult.success">
+              <h6>Scan Result</h6>
+              <p *ngIf="scanResult.qr_data"><strong>QR Data:</strong> {{ scanResult.qr_data }}</p>
+              <p *ngIf="scanResult.error"><strong>Error:</strong> {{ scanResult.error }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeCameraScanner()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- File Upload Scanner Modal -->
+  <div class="modal fade" [class.show]="fileUploadOpen" *ngIf="fileUploadOpen" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-upload me-2"></i>Upload QR Code
+          </h5>
+          <button type="button" class="btn-close" (click)="closeFileUpload()"></button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="!loading && !scanResult">
+            <div class="mb-3">
+              <i class="fas fa-qrcode fa-3x text-primary mb-3"></i>
+              <h5>Upload QR Code Image</h5>
+              <p class="text-muted">Select an image containing of QR code</p>
+            </div>
+            <div class="mb-3">
+              <input
+                type="file"
+                class="form-control"
+                accept="image/*"
+                (change)="onFileSelect($event)"
+                #fileInput>
+            </div>
+            <small class="text-muted">
+              Supported formats: JPG, PNG, GIF<br>
+              Maximum file size: 5MB
+            </small>
+          </div>
+
+          <div *ngIf="scanResult && !attendanceResult" class="mb-3">
+            <div class="alert" [class.alert-success]="scanResult.success" [class.alert-danger]="!scanResult.success">
+              <h6>Scan Result</h6>
+              <p><strong>Success:</strong> {{ scanResult.success }}</p>
+              <p *ngIf="scanResult.qr_data"><strong>QR Data:</strong> {{ scanResult.qr_data }}</p>
+              <p *ngIf="scanResult.confidence"><strong>Confidence:</strong> {{ (scanResult.confidence * 100).toFixed(1) }}%</p>
+              <p *ngIf="scanResult.error"><strong>Error:</strong> {{ scanResult.error }}</p>
+            </div>
+          </div>
+
+          <div *ngIf="attendanceResult" class="mb-3">
+            <div class="alert" [class.alert-success]="attendanceResult.success" [class.alert-danger]="!attendanceResult.success">
+              <h6>Attendance Result</h6>
+              <p *ngIf="attendanceResult.message"><strong>Message:</strong> {{ attendanceResult.message }}</p>
+              <p *ngIf="attendanceResult.session"><strong>Session:</strong> {{ attendanceResult.session }}</p>
+              <p *ngIf="attendanceResult.check_in_time"><strong>Check-in:</strong> {{ attendanceResult.check_in_time | date:'medium' }}</p>
+              <p *ngIf="attendanceResult.status"><strong>Status:</strong> {{ attendanceResult.status }}</p>
+              <p *ngIf="attendanceResult.error"><strong>Error:</strong> {{ attendanceResult.error }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeFileUpload()">Close</button>
+          <button *ngIf="selectedFile && !scanResult" type="button" class="btn btn-primary" (click)="scanQRFromFile()" [disabled]="loading">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+            Scan QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Backdrop -->
+  <div class="modal-backdrop fade" [class.show]="scannerOpen || cameraScannerOpen || fileUploadOpen" *ngIf="scannerOpen || cameraScannerOpen || fileUploadOpen"></div>
 </div>

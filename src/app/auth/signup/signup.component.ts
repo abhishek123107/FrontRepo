@@ -41,6 +41,8 @@ export class SignupComponent implements OnInit {
         student_id: [''],
         department: [''],
         year_of_study: [''],
+        address: ['', [Validators.required]],
+        document: ['', [Validators.required]],
       },
       { validators: this.passwordMatchValidator }
     );
@@ -50,6 +52,18 @@ export class SignupComponent implements OnInit {
     // Redirect if already authenticated
     if (this.authService.isAuthenticated()) {
       this.redirectBasedOnRole();
+    }
+  }
+
+  /** Handle file selection */
+  onFileSelect(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.signupForm.patchValue({
+        document: file
+      });
+      // Mark as touched to trigger validation
+      this.signupForm.get('document')?.markAsTouched();
     }
   }
 
@@ -82,10 +96,24 @@ export class SignupComponent implements OnInit {
     this.loading = true;
     this.error = null;
     
-    // Fix field name mismatch: password2 -> password_confirm
-    const formData = { ...this.signupForm.value };
-    formData.password_confirm = formData.password2;
-    delete formData.password2;
+    // Create FormData for file upload
+    const formData = new FormData();
+    
+    // Add all form fields
+    Object.keys(this.signupForm.value).forEach(key => {
+      if (key === 'document') {
+        // Handle file upload
+        const file = this.signupForm.get(key)?.value;
+        if (file) {
+          formData.append('document', file);
+        }
+      } else if (key === 'password2') {
+        // Fix field name mismatch: password2 -> password_confirm
+        formData.append('password_confirm', this.signupForm.get(key)?.value);
+      } else {
+        formData.append(key, this.signupForm.get(key)?.value);
+      }
+    });
     
     this.authService.register(formData).subscribe({
       next: (res: AuthResponse) => {
@@ -154,5 +182,11 @@ export class SignupComponent implements OnInit {
   }
   get lastName() {
     return this.signupForm.get('last_name');
+  }
+  get address() {
+    return this.signupForm.get('address');
+  }
+  get document() {
+    return this.signupForm.get('document');
   }
 }

@@ -150,7 +150,7 @@
                 </div>
               </td>
               <td>{{ payment.description || payment.plan_name || 'Payment' }}</td>
-              <td><strong>₹{{ payment.amount }}</strong></td>
+              <td><strong>₹{{ getDisplayAmount(payment.amount) }}</strong></td>
               <td>
                 <span
                   class="badge"
@@ -244,7 +244,7 @@
         </div>
         <div class="modal-body">
           <div *ngIf="selectedPayment" class="mb-3">
-            <p><strong>Amount:</strong> ₹{{ selectedPayment.amount }}</p>
+            <p><strong>Amount:</strong> ₹{{ getDisplayAmount(selectedPayment.amount) }}</p>
             <p><strong>Method:</strong> {{ selectedPayment.method }}</p>
             <p><strong>Description:</strong> {{ selectedPayment.description || selectedPayment.plan_name || 'Payment' }}</p>
             <p><strong>Date:</strong> {{ selectedPayment.date | date : "medium" }}</p>

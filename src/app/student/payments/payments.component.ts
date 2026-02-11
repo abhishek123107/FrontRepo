@@ -54,6 +54,47 @@ export class PaymentsComponent implements OnInit {
       account_holder_name: ['', Validators.required],
       payment_date: ['', Validators.required]
     });
+
+    // Listen to payment type changes to auto-fill amount
+    this.paymentForm.get('description')?.valueChanges.subscribe(value => {
+      this.updateAmountBasedOnType(value);
+    });
+  }
+
+  /** Update amount based on payment type */
+  updateAmountBasedOnType(paymentType: string): void {
+    const amountControl = this.paymentForm.get('amount');
+    if (!amountControl || !paymentType) return;
+
+    const amounts: { [key: string]: number } = {
+      'Morning Shift': 300,
+      'Afternoon Shift': 350,
+      'Evening Shift': 300,
+      'Full Day': 500,
+      'Night Shift': 350,
+      '24/7 Access': 800
+    };
+
+    if (amounts[paymentType]) {
+      amountControl.setValue(amounts[paymentType]);
+      amountControl.disable(); // Disable amount field for predefined amounts
+    } else {
+      amountControl.enable(); // Enable for custom amounts like fines
+    }
+  }
+
+  /** Check if current payment type is predefined */
+  isPredefinedPayment(): boolean {
+    const description = this.paymentForm.get('description')?.value;
+    const predefinedTypes = [
+      'Morning Shift',
+      'Afternoon Shift', 
+      'Evening Shift',
+      'Full Day',
+      'Night Shift',
+      '24/7 Access'
+    ];
+    return predefinedTypes.includes(description);
   }
 
   ngOnInit(): void {

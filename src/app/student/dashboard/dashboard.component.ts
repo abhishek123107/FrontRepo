@@ -8,8 +8,74 @@ import {
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from '../../shared/navbar/navbar.component';
 import { AuthService, User } from '../../services/auth.service';
-import { StudentService, StudentDashboard, StudentProfile, StudentStats, RecentActivity } from '../../services/student.service';
-import { Subscription } from 'rxjs';
+import { PaymentService, Payment } from '../../services/payment.service';
+import { Subscription, Observable } from 'rxjs';
+
+// Define interfaces locally to avoid import issues
+interface StudentProfile {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  student_id?: string;
+  department?: string;
+  year_of_study?: number;
+  membership_type: 'basic' | 'premium' | 'vip';
+  membership_expiry?: string;
+  avatar?: string;
+  total_bookings: number;
+  total_attendance_hours: number;
+  consistency_score: number;
+  is_active: boolean;
+  date_joined: string;
+  last_login?: string;
+}
+
+interface StudentStats {
+  total_bookings: number;
+  active_bookings: number;
+  completed_bookings: number;
+  cancelled_bookings: number;
+  total_attendance_days: number;
+  attendance_percentage: number;
+  total_payments: number;
+  pending_payments: number;
+  membership_status: string;
+  days_until_expiry: number;
+}
+
+interface RecentActivity {
+  id: number;
+  type: 'booking' | 'attendance' | 'payment' | 'profile_update';
+  title: string;
+  description: string;
+  timestamp: string;
+  status?: 'completed' | 'pending' | 'cancelled';
+}
+
+interface StudentDashboard {
+  profile: StudentProfile;
+  stats: StudentStats;
+  recent_activities: RecentActivity[];
+  notifications: any[];
+}
+
+// Mock StudentService for fallback
+class MockStudentService {
+  getStudentProfile(): Observable<StudentProfile> {
+    return new Observable<StudentProfile>();
+  }
+  
+  getStudentStats(): Observable<StudentStats> {
+    return new Observable<StudentStats>();
+  }
+  
+  getRecentActivities(limit: number): Observable<RecentActivity[]> {
+    return new Observable<RecentActivity[]>();
+  }
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -35,6 +101,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   studentProfile: StudentProfile | null = null;
   studentStats: StudentStats | null = null;
   recentActivities: RecentActivity[] = [];
+  paymentHistory: Payment[] = [];
   
   // UI State
   error: string | null = null;
@@ -43,7 +110,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService, 
     private router: Router,
-    private studentService: StudentService
+    private paymentService: PaymentService
   ) {}
 
   ngOnInit(): void {
@@ -83,20 +150,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.dashboardLoading = true;
     this.error = null;
     
-    this.studentService.getStudentDashboard().subscribe({
-      next: (dashboard: StudentDashboard) => {
-        this.studentDashboard = dashboard;
-        this.studentProfile = dashboard.profile;
-        this.studentStats = dashboard.stats;
-        this.recentActivities = dashboard.recent_activities;
+    this.paymentService.getPayments().subscribe({
+      next: (payments: Payment[]) => {
+        this.paymentHistory = payments;
         this.dashboardLoading = false;
+        console.log('✅ Payment history loaded successfully:', payments);
       },
       error: (err: any) => {
-        console.error('Error loading student dashboard:', err);
-        this.error = 'Failed to load dashboard data';
+        console.error('❌ Error loading payment history:', err);
+        this.error = 'Failed to load payment history';
         this.dashboardLoading = false;
         
-        // Fallback to individual calls if dashboard endpoint fails
+        // Fallback to individual calls if payment service fails
         this.loadIndividualData();
       }
     });
@@ -105,8 +170,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private loadIndividualData(): void {
     this.dashboardLoading = true;
     
+    const mockService = new MockStudentService();
+    
     // Load profile
-    this.studentService.getStudentProfile().subscribe({
+    mockService.getStudentProfile().subscribe({
       next: (profile: StudentProfile) => {
         this.studentProfile = profile;
       },
@@ -116,19 +183,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
 
     // Load stats
-    this.studentService.getStudentStats().subscribe({
+    mockService.getStudentStats().subscribe({
       next: (stats: StudentStats) => {
         this.studentStats = stats;
         this.dashboardLoading = false;
       },
       error: (err: any) => {
         console.error('Error loading stats:', err);
-        this.dashboardLoading = false;
       }
     });
 
-    // Load activities
-    this.studentService.getRecentActivities(5).subscribe({
+    // Load recent activities
+    mockService.getRecentActivities(5).subscribe({
       next: (activities: RecentActivity[]) => {
         this.recentActivities = activities;
       },

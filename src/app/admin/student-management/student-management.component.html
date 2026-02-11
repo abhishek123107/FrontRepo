@@ -1,34 +1,62 @@
 <div class="container-fluid">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="h3 mb-1">
+        <i class="fas fa-users-cog me-2 text-primary"></i>
+        Student Management
+      </h2>
+      <p class="text-muted mb-0">Manage and monitor all registered students</p>
+    </div>
+    <div>
+      <button class="btn btn-success" (click)="refreshData()">
+        <i class="fas fa-sync-alt me-2"></i>Refresh Data
+      </button>
+    </div>
+  </div>
+
   <!-- Statistics Cards -->
   <div class="row mb-4">
     <div class="col-md-3">
-      <div class="card text-center">
+      <div class="card text-center border-0 shadow-sm">
         <div class="card-body">
-          <h5 class="card-title">{{ totalStudents }}</h5>
-          <p class="card-text">Total Students</p>
+          <div class="text-primary mb-2">
+            <i class="fas fa-users fa-2x"></i>
+          </div>
+          <h3 class="card-title mb-1">{{ totalStudents }}</h3>
+          <p class="card-text text-muted">Total Students</p>
         </div>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-center bg-success text-white">
+      <div class="card text-center bg-success text-white border-0 shadow-sm">
         <div class="card-body">
-          <h5 class="card-title">{{ activeStudents }}</h5>
+          <div class="mb-2">
+            <i class="fas fa-user-check fa-2x"></i>
+          </div>
+          <h3 class="card-title mb-1">{{ activeStudents }}</h3>
           <p class="card-text">Active Students</p>
         </div>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-center bg-warning text-white">
+      <div class="card text-center bg-warning text-white border-0 shadow-sm">
         <div class="card-body">
-          <h5 class="card-title">{{ premiumMembers }}</h5>
+          <div class="mb-2">
+            <i class="fas fa-crown fa-2x"></i>
+          </div>
+          <h3 class="card-title mb-1">{{ premiumMembers }}</h3>
           <p class="card-text">Premium Members</p>
         </div>
       </div>
     </div>
     <div class="col-md-3">
-      <div class="card text-center bg-info text-white">
+      <div class="card text-center bg-info text-white border-0 shadow-sm">
         <div class="card-body">
-          <h5 class="card-title">{{ basicMembers }}</h5>
+          <div class="mb-2">
+            <i class="fas fa-user fa-2x"></i>
+          </div>
+          <h3 class="card-title mb-1">{{ basicMembers }}</h3>
           <p class="card-text">Basic Members</p>
         </div>
       </div>
@@ -36,21 +64,30 @@
   </div>
 
   <!-- Filters Section -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5>Filters & Search</h5>
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0">
+        <i class="fas fa-filter me-2"></i>Filters & Search
+      </h5>
     </div>
     <div class="card-body">
-      <div class="row">
-        <div class="col-md-4">
-          <input type="text" 
-                 class="form-control" 
-                 placeholder="Search students..." 
-                 [(ngModel)]="searchTerm" 
-                 (input)="onSearchChange()">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Search Students</label>
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
+            </span>
+            <input type="text" 
+                   class="form-control" 
+                   placeholder="Search by name, email, phone..." 
+                   [(ngModel)]="searchTerm" 
+                   (input)="onSearchChange()">
+          </div>
         </div>
         <div class="col-md-2">
-          <select class="form-control" 
+          <label class="form-label fw-semibold">Department</label>
+          <select class="form-select" 
                   [(ngModel)]="selectedDepartment" 
                   (change)="onFilterChange()">
             <option value="">All Departments</option>
@@ -58,7 +95,8 @@
           </select>
         </div>
         <div class="col-md-2">
-          <select class="form-control" 
+          <label class="form-label fw-semibold">Membership</label>
+          <select class="form-select" 
                   [(ngModel)]="selectedMembership" 
                   (change)="onFilterChange()">
             <option value="">All Memberships</option>
@@ -66,18 +104,47 @@
           </select>
         </div>
         <div class="col-md-2">
-          <select class="form-control" 
+          <label class="form-label fw-semibold">Study Year</label>
+          <select class="form-select" 
                   [(ngModel)]="selectedYear" 
                   (change)="onFilterChange()">
             <option value="">All Years</option>
             <option *ngFor="let year of years" [value]="year">Year {{ year }}</option>
           </select>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
+          <label class="form-label fw-semibold">Actions</label>
           <div class="btn-group w-100">
-            <button class="btn btn-outline-secondary" (click)="clearFilters()">Clear</button>
-            <button class="btn btn-primary" (click)="refreshData()">Refresh</button>
-            <button class="btn btn-success" (click)="exportToCSV()">Export</button>
+            <button class="btn btn-outline-secondary" (click)="clearFilters()" title="Clear Filters">
+              <i class="fas fa-times"></i> Clear
+            </button>
+            <button class="btn btn-success" (click)="exportToCSV()" title="Export to CSV">
+              <i class="fas fa-download"></i> Export
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Active Filters Display -->
+      <div class="row mt-3" *ngIf="hasActiveFilters()">
+        <div class="col-12">
+          <div class="d-flex align-items-center flex-wrap gap-2">
+            <span class="text-muted fw-semibold">Active Filters:</span>
+            <span class="badge bg-light text-dark" *ngIf="searchTerm">
+              <i class="fas fa-search me-1"></i>{{ searchTerm }}
+            </span>
+            <span class="badge bg-primary" *ngIf="selectedDepartment">
+              <i class="fas fa-building me-1"></i>{{ selectedDepartment }}
+            </span>
+            <span class="badge bg-info" *ngIf="selectedMembership">
+              <i class="fas fa-crown me-1"></i>{{ selectedMembership | titlecase }}
+            </span>
+            <span class="badge bg-warning text-dark" *ngIf="selectedYear">
+              <i class="fas fa-graduation-cap me-1"></i>Year {{ selectedYear }}
+            </span>
+            <button class="btn btn-sm btn-outline-danger" (click)="clearFilters()">
+              <i class="fas fa-times"></i> Clear All
+            </button>
           </div>
         </div>
       </div>
@@ -85,88 +152,201 @@
   </div>
 
   <!-- Students Table -->
-  <div class="card">
-    <div class="card-header">
-      <h5>Registered Students ({{ filteredStudents.length }})</h5>
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="fas fa-users me-2"></i>Registered Students 
+          <span class="badge bg-light text-dark ms-2">{{ filteredStudents.length }}</span>
+        </h5>
+        <div class="d-flex align-items-center gap-3">
+          <small class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Showing {{ filteredStudents.length }} of {{ totalStudents }} students
+          </small>
+        </div>
+      </div>
     </div>
-    <div class="card-body">
+    <div class="card-body p-0">
       <!-- Loading State -->
       <div *ngIf="isLoading" class="text-center py-5">
-        <div class="spinner-border" role="status">
+        <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
-        <p class="mt-2">Loading students...</p>
+        <p class="mt-2 text-muted">Loading students...</p>
       </div>
 
       <!-- Students Table -->
       <div *ngIf="!isLoading" class="table-responsive">
-        <table class="table table-striped table-hover">
-          <thead class="table-dark">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
             <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Full Name</th>
-              <th>Phone</th>
-              <th>Student ID</th>
-              <th>Department</th>
-              <th>Year</th>
-              <th>Membership</th>
-              <th>Status</th>
-              <th>Bookings</th>
-              <th>Active</th>
-              <th>Actions</th>
+              <th class="border-0">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-hashtag me-2 text-muted"></i>
+                  ID
+                </div>
+              </th>
+              <th class="border-0">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-user me-2 text-muted"></i>
+                  Student Info
+                </div>
+              </th>
+              <th class="border-0">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-phone me-2 text-muted"></i>
+                  Contact
+                </div>
+              </th>
+              <th class="border-0">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-graduation-cap me-2 text-muted"></i>
+                  Academic
+                </div>
+              </th>
+              <th class="border-0">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-crown me-2 text-muted"></i>
+                  Membership
+                </div>
+              </th>
+              <th class="border-0">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-chart-line me-2 text-muted"></i>
+                  Activity
+                </div>
+              </th>
+              <th class="border-0">
+                <div class="d-flex align-items-center">
+                  <i class="fas fa-toggle-on me-2 text-muted"></i>
+                  Status
+                </div>
+              </th>
+              <th class="border-0 text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                  <i class="fas fa-cogs me-2 text-muted"></i>
+                  Actions
+                </div>
+              </th>
+              <th class="border-0 text-center">
+                <div class="d-flex align-items-center justify-content-center">
+                  <i class="fas fa-trash me-2 text-muted"></i>
+                  Delete
+                </div>
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let student of filteredStudents">
-              <td>{{ student.id }}</td>
-              <td>{{ student.username }}</td>
-              <td>{{ student.email }}</td>
-              <td>{{ student.first_name }} {{ student.last_name }}</td>
-              <td>{{ student.phone || '-' }}</td>
-              <td>{{ student.student_id || '-' }}</td>
+            <tr *ngFor="let student of filteredStudents" class="align-middle">
+              <td class="fw-semibold text-muted">{{ student.id }}</td>
               <td>
-                <span *ngIf="student.department" class="badge bg-primary">{{ student.department }}</span>
-                <span *ngIf="!student.department">-</span>
-              </td>
-              <td>{{ student.year_of_study ? 'Year ' + student.year_of_study : '-' }}</td>
-              <td>
-                <span class="badge" 
-                      [style.background-color]="getMembershipTypeColor(student.membership_type)"
-                      style="color: white;">
-                  {{ student.membership_type | titlecase }}
-                </span>
+                <div class="d-flex align-items-center">
+                  <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3">
+                    {{ student.first_name.charAt(0) || 'U' }}{{ student.last_name.charAt(0) || '' }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ student.first_name }} {{ student.last_name }}</div>
+                    <div class="text-muted small">{{ student.username }}</div>
+                    <div class="text-muted small">{{ student.email }}</div>
+                  </div>
+                </div>
               </td>
               <td>
-                <span class="badge" 
-                      [style.background-color]="getMembershipStatusColor(student.membership_status)"
-                      style="color: white;">
-                  {{ student.membership_status }}
-                </span>
+                <div class="small">
+                  <div *ngIf="student.phone" class="mb-1">
+                    <i class="fas fa-phone me-1 text-muted"></i>{{ student.phone }}
+                  </div>
+                  <div *ngIf="student.student_id" class="text-muted">
+                    <i class="fas fa-id-card me-1"></i>{{ student.student_id }}
+                  </div>
+                  <div *ngIf="!student.phone && !student.student_id" class="text-muted">-</div>
+                </div>
               </td>
-              <td>{{ student.total_bookings || 0 }}</td>
               <td>
-                <div class="form-check">
+                <div class="small">
+                  <div *ngIf="student.department" class="mb-1">
+                    <span class="badge bg-primary">{{ student.department }}</span>
+                  </div>
+                  <div *ngIf="student.year_of_study" class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>Year {{ student.year_of_study }}
+                  </div>
+                  <div *ngIf="!student.department && !student.year_of_study" class="text-muted">-</div>
+                </div>
+              </td>
+              <td>
+                <div class="small">
+                  <div class="mb-1">
+                    <span class="badge" 
+                          [style.background-color]="getMembershipTypeColor(student.membership_type)"
+                          style="color: white;">
+                      <i class="fas fa-crown me-1"></i>{{ student.membership_type | titlecase }}
+                    </span>
+                  </div>
+                  <div>
+                    <span class="badge" 
+                          [style.background-color]="getMembershipStatusColor(student.membership_status)"
+                          style="color: white; font-size: 0.7em;">
+                      {{ student.membership_status }}
+                    </span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="small">
+                  <div class="mb-1">
+                    <i class="fas fa-book me-1 text-muted"></i>
+                    <strong>{{ student.total_bookings || 0 }}</strong> bookings
+                  </div>
+                  <div class="text-muted">
+                    <i class="fas fa-calendar-plus me-1"></i>
+                    Joined {{ formatDate(student.date_joined) }}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="form-check form-switch">
                   <input class="form-check-input" 
                          type="checkbox" 
                          [checked]="student.is_active"
-                         (change)="toggleStudentStatus(student)">
+                         (change)="toggleStudentStatus(student)"
+                         [disabled]="isLoading">
+                  <label class="form-check-label">
+                    <span class="badge" [class]="student.is_active ? 'bg-success' : 'bg-danger'">
+                      {{ student.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </label>
                 </div>
               </td>
-              <td>
-                <div class="btn-group btn-group-sm">
+              <td class="text-center">
+                <div class="btn-group btn-group-sm" role="group">
                   <button class="btn btn-outline-primary" 
                           (click)="viewStudentDetails(student)"
-                          title="View Details">
-                    <i class="bi bi-eye"></i>
+                          title="View Details"
+                          [disabled]="isLoading">
+                    <i class="fas fa-eye"></i>
                   </button>
                   <button class="btn btn-outline-success" 
                           (click)="upgradeMembership(student)"
-                          title="Upgrade Membership">
-                    <i class="bi bi-arrow-up-circle"></i>
+                          title="Upgrade Membership"
+                          [disabled]="isLoading">
+                    <i class="fas fa-arrow-up-circle"></i>
+                  </button>
+                  <button class="btn btn-outline-warning" 
+                          (click)="editStudent(student)"
+                          title="Edit Student"
+                          [disabled]="isLoading">
+                    <i class="fas fa-edit"></i>
                   </button>
                 </div>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-outline-danger btn-sm" 
+                        (click)="deleteStudent(student)"
+                        title="Delete Student"
+                        [disabled]="isLoading">
+                  <i class="fas fa-trash"></i>
+                </button>
               </td>
             </tr>
           </tbody>
@@ -174,10 +354,14 @@
 
         <!-- No Data State -->
         <div *ngIf="filteredStudents.length === 0" class="text-center py-5">
-          <i class="bi bi-people display-1 text-muted"></i>
-          <h5 class="text-muted mt-3">No students found</h5>
-          <p class="text-muted">Try adjusting your filters or search criteria</p>
-          <button class="btn btn-primary" (click)="clearFilters()">Clear Filters</button>
+          <div class="text-muted">
+            <i class="fas fa-search fa-3x mb-3"></i>
+            <h5>No students found</h5>
+            <p class="mb-3">Try adjusting your filters or search criteria</p>
+            <button class="btn btn-primary" (click)="clearFilters()">
+              <i class="fas fa-times me-2"></i>Clear Filters
+            </button>
+          </div>
         </div>
       </div>
     </div>

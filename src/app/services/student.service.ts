@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError, catchError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { Payment } from './payment.service';
 import { environment } from '../../environments/environment';
 
 export interface StudentProfile {

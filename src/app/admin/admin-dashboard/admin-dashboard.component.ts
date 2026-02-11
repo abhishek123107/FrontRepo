@@ -105,9 +105,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   private loadDashboardData(): void {
+    const token = this.authService.getToken();
+    const headers: { [key: string]: string } = token ? { 'Authorization': `Bearer ${token}` } : {};
+
     // Load bookings
     this.subscription.add(
-      this.http.get<any>(`${environment.apiUrl}/bookings/`).subscribe({
+      this.http.get<any>(`${environment.apiUrl}/bookings/`, { headers }).subscribe({
         next: (response: any) => {
           // Handle paginated response
           const bookings = response.results || response;
@@ -126,7 +129,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     // Load attendance records
     this.subscription.add(
-      this.http.get<any>(`${environment.apiUrl}/records/`).subscribe({
+      this.http.get<any>(`${environment.apiUrl}/records/`, { headers }).subscribe({
         next: (response: any) => {
           // Handle paginated response
           const records = response.results || response;

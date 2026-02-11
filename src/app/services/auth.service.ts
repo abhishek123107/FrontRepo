@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -16,6 +16,8 @@ export interface User {
   student_id?: string;
   department?: string;
   year_of_study?: number;
+  address?: string;
+  document?: string;
   is_staff?: boolean;
   is_superuser?: boolean;
   avatar?: string;
@@ -122,7 +124,11 @@ export class AuthService {
   }
 
   getProfile(): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/accounts/profile/`);
+    const token = this.getToken();
+    const httpOptions = token ? { 
+      headers: new HttpHeaders({ 'Authorization': `Bearer ${token}` })
+    } : {};
+    return this.http.get<User>(`${this.apiUrl}/accounts/profile/`, httpOptions);
   }
 
   updateProfile(data: Partial<User>): Observable<User> {

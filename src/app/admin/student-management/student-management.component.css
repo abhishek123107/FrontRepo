@@ -246,3 +246,176 @@
 .table-responsive::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* Avatar Styles */
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Enhanced Table Styles */
+.table-light th {
+  background-color: #007bff !important;
+  color: white !important;
+  border-bottom: 2px solid #0056b3 !important;
+}
+
+.table-light th i {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Form Switch Styles */
+.form-check-input[type="checkbox"] {
+  width: 2.5em;
+  height: 1.25em;
+  border-radius: 1.25em;
+  background-color: #dee2e6;
+  border: none;
+  position: relative;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.form-check-input[type="checkbox"]:checked {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.form-check-input[type="checkbox"]:checked::before {
+  content: "";
+  position: absolute;
+  left: 0.25em;
+  top: 0.125em;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  background-color: white;
+  transition: transform 0.15s ease-in-out;
+  transform: translateX(1.25em);
+}
+
+.form-check-input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  left: 0.25em;
+  top: 0.125em;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  background-color: white;
+  transition: transform 0.15s ease-in-out;
+}
+
+/* Active Filters Badge Styles */
+.badge.bg-light {
+  border: 1px solid #dee2e6;
+}
+
+/* Enhanced Card Headers */
+.card-header.bg-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.card-header.bg-dark {
+  background: linear-gradient(135deg, #343a40 0%, #212529 100%) !important;
+}
+
+/* Input Group Styles */
+.input-group-text {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #6c757d;
+}
+
+.form-control:focus + .input-group-text {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+/* Enhanced Button Styles */
+.btn-outline-secondary:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.btn-outline-danger {
+  transition: all 0.3s ease;
+}
+
+.btn-outline-danger:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* Student Info Layout */
+.student-info {
+  min-width: 200px;
+}
+
+.student-name {
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 2px;
+}
+
+.student-details {
+  font-size: 0.875rem;
+  color: #6c757d;
+  line-height: 1.2;
+}
+
+/* Activity Section */
+.activity-info {
+  min-width: 120px;
+}
+
+/* Membership Section */
+.membership-info {
+  min-width: 100px;
+}
+
+/* Status Section */
+.status-section {
+  min-width: 80px;
+}
+
+/* Responsive Improvements */
+@media (max-width: 992px) {
+  .student-info {
+    min-width: 180px;
+  }
+  
+  .activity-info {
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  .avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+  }
+  
+  .student-name {
+    font-size: 0.9rem;
+  }
+  
+  .student-details {
+    font-size: 0.8rem;
+  }
+}

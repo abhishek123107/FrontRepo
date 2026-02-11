@@ -66,3 +66,44 @@
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* Timing Card Styles */
+.timing-card {
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.timing-card:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,123,255,0.15);
+}
+
+.timing-card.active {
+  border-color: #28a745;
+  background-color: #f8fff9;
+  box-shadow: 0 4px 12px rgba(40,167,69,0.15);
+}
+
+.timing-card .card-body {
+  padding: 1rem;
+}
+
+.timing-card .card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #495057;
+}
+
+.timing-card.active .card-title {
+  color: #28a745;
+}
+
+.timing-card .badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.75rem;
+}

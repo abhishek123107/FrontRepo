@@ -17,12 +17,57 @@ export class SeatManagementComponent implements OnInit {
   seats: Seat[] = [];
   showModal = false;
   isEditing = false;
-  currentSeat: Seat = { id: 0, number: 0, status: 'available', photo: '' };
+  currentSeat: Seat = { 
+    id: 0, 
+    seat_number: '', 
+    status: 'available', 
+    photo: '',
+    has_power_outlet: false,
+    has_monitor: false,
+    is_near_window: false,
+    is_accessible: false,
+    seat_type: 'regular',
+    time_slot: 'morning' // Add time slot property
+  };
   selectedFile: File | null = null;
   loading = false;
   error: string | null = null;
 
+  // Time slot options
+  timeSlots = [
+    { id: 'morning', name: 'Morning Shift', time: '6 AM - 11 AM', price: '₹300/- महीना' },
+    { id: 'afternoon', name: 'Afternoon Shift', time: '11 AM - 4 PM', price: '₹350/- महीना' },
+    { id: 'evening', name: 'Evening Shift', time: '4 PM - 9 PM', price: '₹300/- महीना' },
+    { id: 'night', name: 'Night Shift', time: '7 PM - 6 AM', price: '₹350/- महीना' },
+    { id: 'full-day', name: 'Full Day', time: '12 Hours', price: '₹500/- महीना' },
+    { id: '24-7', name: '24/7 Access', time: 'Unlimited', price: '₹800/- महीना' }
+  ];
+
+  // Cache for time slot lookup to optimize performance
+  private _timeSlotCache = new Map<string, string>();
+  private _lastTimeSlotId: string = '';
+
   constructor(private seatService: SeatManagementService) {}
+
+  /**
+   * Helper method to get time slot name by ID
+   * Optimized with caching for better performance
+   */
+  getTimeSlotName(timeSlotId: string): string {
+    if (!timeSlotId) return '';
+    
+    // Return cached value if already computed
+    if (this._timeSlotCache.has(timeSlotId)) {
+      return this._timeSlotCache.get(timeSlotId)!;
+    }
+    
+    // Find and cache the time slot name
+    const timeSlot = this.timeSlots.find(slot => slot.id === timeSlotId);
+    const slotName = timeSlot?.name || timeSlotId;
+    this._timeSlotCache.set(timeSlotId, slotName);
+    
+    return slotName;
+  }
 
   ngOnInit() {
     this.loadSeats();
@@ -48,7 +93,18 @@ export class SeatManagementComponent implements OnInit {
 
   openAddModal() {
     this.isEditing = false;
-    this.currentSeat = { id: 0, number: 0, status: 'available', photo: '' };
+    this.currentSeat = { 
+      id: 0, 
+      seat_number: '', 
+      status: 'available', 
+      photo: '',
+      has_power_outlet: false,
+      has_monitor: false,
+      is_near_window: false,
+      is_accessible: false,
+      seat_type: 'regular',
+      time_slot: 'morning' // Default to morning shift
+    };
     this.selectedFile = null;
     this.showModal = true;
   }
@@ -61,16 +117,16 @@ export class SeatManagementComponent implements OnInit {
   }
 
   deleteSeat(seat: Seat) {
-    if (confirm(`Are you sure you want to delete Seat ${seat.number}?`)) {
+    if (confirm(`Are you sure you want to delete Seat ${seat.seat_number}?`)) {
       this.seatService.deleteSeat(seat.id).subscribe({
         next: () => {
           this.seats = this.seats.filter((s) => s.id !== seat.id);
-          console.log(`Seat ${seat.number} deleted successfully`);
+          console.log(`Seat ${seat.seat_number} deleted successfully`);
           alert('Seat deleted successfully!');
         },
         error: (err) => {
           console.error('Error deleting seat:', err);
-          alert('Failed to delete seat. Please try again.');
+          alert('Failed to delete seat');
         }
       });
     }
@@ -78,7 +134,18 @@ export class SeatManagementComponent implements OnInit {
 
   closeModal() {
     this.showModal = false;
-    this.currentSeat = { id: 0, number: 0, status: 'available', photo: '' };
+    this.currentSeat = { 
+      id: 0, 
+      seat_number: '', 
+      status: 'available', 
+      photo: '',
+      has_power_outlet: false,
+      has_monitor: false,
+      is_near_window: false,
+      is_accessible: false,
+      seat_type: 'regular',
+      time_slot: 'morning' // Reset to morning shift
+    };
     this.selectedFile = null;
   }
 
@@ -99,8 +166,9 @@ export class SeatManagementComponent implements OnInit {
       
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append('number', this.currentSeat.number.toString());
+      formData.append('seat_number', this.currentSeat.seat_number);
       formData.append('status', this.currentSeat.status);
+      formData.append('time_slot', this.currentSeat.time_slot || 'morning'); // Add time slot
       
       if (this.selectedFile) {
         formData.append('photo', this.selectedFile, this.selectedFile.name);
@@ -147,13 +215,31 @@ export class SeatManagementComponent implements OnInit {
       // If photo is a relative path, construct full URL
       return `${environment.backendUrl}${seat.photo}`;
     }
-    // Default placeholder
-    return `https://picsum.photos/400/300?random=${seat.number}`;
+    // Default placeholder with better error handling
+    return `https://picsum.photos/seed/seat-${seat.seat_number || seat.id}/400/300`;
   }
 
-  // Handle image loading errors
+  // Handle image loading errors with better fallback
   onImageError(event: any, seat: Seat) {
-    console.warn(`Failed to load image for seat ${seat.number}, using placeholder`);
-    event.target.src = `https://picsum.photos/400/300?random=${seat.number}`;
+    console.warn(`Failed to load image for seat ${seat.seat_number}, using fallback`);
+    
+    // Try multiple fallback strategies
+    const fallbackUrl = `https://picsum.photos/seed/seat-${seat.seat_number || seat.id}/400/300`;
+    
+    // Set fallback image
+    if (event.target) {
+      event.target.src = fallbackUrl;
+    }
+    
+    // Add error indicator to seat data
+    seat.imageError = true;
+    
+    // Log the error for debugging
+    console.error('Image load error details:', {
+      seat: seat.seat_number,
+      originalUrl: seat.photo,
+      error: event,
+      fallbackUrl: fallbackUrl
+    });
   }
 }

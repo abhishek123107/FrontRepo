@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
 
 export interface Payment {
@@ -36,36 +37,50 @@ export class PaymentService {
   // Use environment.apiUrl + '/payments/'
   private apiUrl = `${environment.apiUrl}/payments/`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) { }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
+  }
 
   /** Get all payment history for current user */
   getPayments(): Observable<Payment[]> {
-    console.log('🔄 PaymentService: Fetching payments...');
-    // Backend paginated response return करता है, इसलिए हमें results array extract करना होगा
-    // साथ ही page_size बड़ा set करें ताकि सभी records मिलें
-    const params = new HttpParams().set('page_size', '1000');
+    console.log('🔄 PaymentService: Fetching all payments...');
+    // Get all payments without pagination limit
+    const params = new HttpParams().set('page_size', '1000'); // Large number to get all records
+    const headers = this.getAuthHeaders();
     console.log('🔄 PaymentService: API URL:', this.apiUrl);
     console.log('🔄 PaymentService: Params:', params.toString());
+    console.log('🔄 PaymentService: Auth headers present:', !!headers.get('Authorization'));
 
-    return this.http.get<PaginatedResponse | Payment[]>(this.apiUrl, { params }).pipe(
+    return this.http.get<Payment[] | PaginatedResponse>(this.apiUrl, { params, headers }).pipe(
       map((response) => {
         console.log('✅ PaymentService: Raw response received:', response);
-        // अगर paginated response है (results field के साथ)
+        
+        // Handle both paginated response and direct array response
         if (response && typeof response === 'object' && 'results' in response) {
           console.log('✅ PaymentService: Extracting results from paginated response');
-          return (response as PaginatedResponse).results;
+          const paginatedResponse = response as PaginatedResponse;
+          console.log('✅ PaymentService: Total payments found:', paginatedResponse.results.length);
+          return paginatedResponse.results;
         }
-        // अगर direct array है
+        // Handle direct array response
         console.log('✅ PaymentService: Returning direct array response');
-        return response as Payment[];
+        const paymentArray = response as Payment[];
+        console.log('✅ PaymentService: Total payments found:', paymentArray.length);
+        return paymentArray;
       })
     );
   }
 
   /** Submit new payment with screenshot */
   submitPayment(formData: FormData): Observable<Payment> {
-    console.log('🔄 PaymentService: Submitting payment...');
-    console.log('🔄 PaymentService: FormData contents:');
+    console.log(' PaymentService: Submitting payment...');
+    console.log(' PaymentService: FormData contents:');
     formData.forEach((value, key) => {
       if (key === 'screenshot') {
         console.log(`  ${key}: [File: ${(value as File).name}, Size: ${(value as File).size} bytes]`);
@@ -74,6 +89,12 @@ export class PaymentService {
       }
     });
 
-    return this.http.post<Payment>(this.apiUrl, formData);
+    const headers = this.getAuthHeaders();
+    // Remove Content-Type header for FormData to let browser set it automatically with boundary
+    const authHeaders = new HttpHeaders({
+      'Authorization': `Bearer ${this.authService.getToken()}`
+    });
+
+    return this.http.post<Payment>(this.apiUrl, formData, { headers: authHeaders });
   }
 }

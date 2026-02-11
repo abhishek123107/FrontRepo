@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgForm, FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -10,19 +10,53 @@ import {
 import { AuthService } from '../../services/auth.service';
 import { ErrorHandler } from '../../utils/error-handler';
 
+export interface TimeSlot {
+  id: number;
+  start_time: string;
+  end_time: string;
+  available_seats: number;
+  created_at?: string;
+}
+
 @Component({
   selector: 'app-seat-booking',
   standalone: true,
   imports: [FormsModule, CommonModule],
   templateUrl: './seat-booking.component.html',
-  styleUrl: './seat-booking.component.css',
+  styleUrls: ['./seat-booking.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SeatBookingComponent implements OnInit {
   seats: Seat[] = [];
   selectedSeat: Seat | null = null;
+  timeSlots: TimeSlot[] = [];
+  showTimeSlotModalFlag = false;
+  selectedTimeSlot: TimeSlot | null = null;
+  timeSlotForm: NgForm = new NgForm([], []);
+  loading = false;
+  error: string | null = null;
+  isf: string = 'SBIN0001234';
+  qrCode: string = 
+    'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=UPI%20Payment%20for%20Library%20Seat%20Booking';
+  qrData: string = '';
+  bookingForm: NgForm = new NgForm([], []);
+  selectedTimeSlotId: number | null = null;
+  loadingSeats = false;
+  loadingBookings = false;
+  bookings: SeatBooking[] = [];
+  filteredBookings: SeatBooking[] = [];
+  statusFilter: string = 'all';
+  dateFilter: string = '';
+  userFilter: string = '';
+  fileErrorMessage: string = '';
+
+  // Form model for auto-selection
+  bookingFormData = {
+    timing: '',
+    purpose: ''
+  };
 
   paymentStep = 1; // 1=form, 2=payment
-  loading = false;
   selectedFile: File | null = null;
 
   showOfflineMessage = false;
@@ -31,8 +65,6 @@ export class SeatBookingComponent implements OnInit {
   paymentErrorMessage = '';
 
   pendingBooking: SeatBooking | null = null;
-  loadingSeats = true;
-  fileErrorMessage = '';
 
   adminDetails = {
     accountName: 'Library Admin',
@@ -42,13 +74,49 @@ export class SeatBookingComponent implements OnInit {
       'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=UPI%20Payment%20for%20Library%20Seat%20Booking',
   };
 
+  // Time slot sections
+  selectedTimingSection: string = 'morning';
+  timingSections = [
+    { id: 'morning', name: 'Morning Shift', time: '6 AM - 11 AM', price: '₹300/- महीना' },
+    { id: 'afternoon', name: 'Afternoon Shift', time: '11 AM - 4 PM', price: '₹350/- महीना' },
+    { id: 'evening', name: 'Evening Shift', time: '4 PM - 9 PM', price: '₹300/- महीना' },
+    { id: 'night', name: 'Night Shift', time: '7 PM - 6 AM', price: '₹350/- महीना' },
+    { id: 'full-day', name: 'Full Day', time: '12 Hours', price: '₹500/- महीना' },
+    { id: '24-7', name: '24/7 Access', time: 'Unlimited', price: '₹800/- महीना' }
+  ];
+
+  // Cache for timing section lookup to optimize performance
+  private _timingSectionCache = new Map<string, string>();
+  private _lastSelectedTimingSection: string = '';
+
+  /**
+   * Optimized getter for the selected timing section name
+   * Uses caching for better performance in large-scale applications
+   */
+  get selectedTimingSectionName(): string {
+    // Return cached value if selection hasn't changed
+    if (this._lastSelectedTimingSection === this.selectedTimingSection && 
+        this._timingSectionCache.has(this.selectedTimingSection)) {
+      return this._timingSectionCache.get(this.selectedTimingSection)!;
+    }
+
+    // Find and cache the section name
+    const sectionName = this.timingSections.find(section => section.id === this.selectedTimingSection)?.name || '';
+    this._timingSectionCache.set(this.selectedTimingSection, sectionName);
+    this._lastSelectedTimingSection = this.selectedTimingSection;
+    
+    return sectionName;
+  }
+
   constructor(
     private router: Router,
     private seatBookingService: SeatBookingService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {
-    // Don't initialize mock seats immediately - wait for backend data
-    console.log('Component initialized, waiting for authentication and backend data...');
+    // Initialize forms
+    this.timeSlotForm = new NgForm([], []);
+    this.bookingForm = new NgForm([], []);
   }
 
   ngOnInit() {
@@ -70,9 +138,6 @@ export class SeatBookingComponent implements OnInit {
 
     this.seatBookingService.getSeats().subscribe({
       next: (seats) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/e63252b9-4d6f-4a01-ba28-3ad21c918bd7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'seat-booking.component.ts:73',message:'getSeats success',data:{seatsType:typeof seats,isArray:Array.isArray(seats),length:seats?.length,firstSeat:seats?.[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         console.log('Raw seats from backend:', seats);
         console.log('Seats array length:', seats.length);
 
@@ -88,6 +153,8 @@ export class SeatBookingComponent implements OnInit {
 
         this.loadingSeats = false;
         console.log('Loading completed, seats available:', this.seats.length);
+        // Trigger change detection for OnPush strategy
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Backend error details:', error);
@@ -103,47 +170,35 @@ export class SeatBookingComponent implements OnInit {
         console.log('Backend failed, using mock seats for demo');
         this.initializeMockSeats();
         this.loadingSeats = false;
+        // Trigger change detection for OnPush strategy
+        this.cdr.markForCheck();
       },
     });
   }
 
   initializeMockSeats() {
-    // Create seats with different statuses for demonstration
-    const statuses: ('available' | 'booked' | 'maintenance')[] = [
+    // Create 100 seats with different statuses for demonstration
+    const statuses: ('available' | 'occupied' | 'maintenance')[] = [
       'available',
-      'booked',
+      'occupied',
       'maintenance',
     ];
 
-    for (let i = 1; i <= 30; i++) {
-      // Distribute statuses: mostly available, some booked, few maintenance
-      let status: 'available' | 'booked' | 'maintenance' = 'available';
-      if (i % 7 === 0) status = 'booked'; // Every 7th seat booked
+    for (let i = 1; i <= 100; i++) {
+      // Distribute statuses: mostly available, some occupied, few maintenance
+      let status: 'available' | 'occupied' | 'maintenance' = 'available';
+      if (i % 8 === 0) status = 'occupied'; // Every 8th seat occupied
       if (i % 13 === 0) status = 'maintenance'; // Every 13th seat maintenance
 
       this.seats.push({
         id: i,
-        number: i,
+        seat_number: i.toString(),
         status: status,
         selected: false,
         photo: `https://picsum.photos/400/300?random=${i}`, // More reliable placeholder URL
       });
     }
-    console.log('Mock seats created with variety:', this.seats);
-  }
-
-  selectSeat(seat: Seat) {
-    // Only allow selection of available seats
-    if (seat.status !== 'available') {
-      console.warn(`Seat ${seat.number} is not available for booking (status: ${seat.status})`);
-      alert(`Seat ${seat.number} is not available for booking. Please select an available seat.`);
-      return;
-    }
-    
-    if (this.selectedSeat) this.selectedSeat.selected = false;
-    seat.selected = true;
-    this.selectedSeat = seat;
-    console.log(`Selected available seat ${seat.number} (ID: ${seat.id})`);
+    console.log('Mock seats created with 100 seats:', this.seats);
   }
 
   // TrackBy function for better performance with ngFor
@@ -151,20 +206,115 @@ export class SeatBookingComponent implements OnInit {
     return seat.id;
   }
 
-  /** BOOK SEAT */
+  selectSeat(seat: Seat) {
+    // Only allow selection of available seats
+    if (seat.status !== 'available') {
+      console.warn(`Seat ${seat.seat_number} is not available for booking (status: ${seat.status})`);
+      alert(`Seat ${seat.seat_number} is not available for booking. Please select an available seat.`);
+      return;
+    }
+    
+    if (this.selectedSeat) this.selectedSeat.selected = false;
+    seat.selected = true;
+    this.selectedSeat = seat;
+    
+    // Auto-select timing slot and membership plan based on selected seat
+    this.autoSelectTimingAndMembership();
+    
+    console.log(`Selected available seat ${seat.seat_number} (ID: ${seat.id}) for ${this.selectedTimingSection} shift`);
+    // Trigger change detection for OnPush strategy
+    this.cdr.markForCheck();
+  }
+
+  // Select timing section
+  selectTimingSection(sectionId: string) {
+    this.selectedTimingSection = sectionId;
+    // Clear selected seat when changing timing section
+    if (this.selectedSeat) {
+      this.selectedSeat.selected = false;
+      this.selectedSeat = null;
+    }
+    console.log(`Selected timing section: ${sectionId}`);
+    // Trigger change detection for OnPush strategy
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Auto-select timing slot and membership plan based on selected seat
+   */
+  private autoSelectTimingAndMembership(): void {
+    // Get seats for current timing to determine which timing section this seat belongs to
+    const timingSeatMap: { [key: string]: number[] } = {
+      'morning': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+      'afternoon': [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+      'evening': [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51],
+      'night': [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68],
+      'full-day': [69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84],
+      '24-7': [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
+    };
+
+    // Find which timing section this seat belongs to
+    let detectedTimingSection = '';
+    for (const [timing, seatIds] of Object.entries(timingSeatMap)) {
+      if (seatIds.includes(this.selectedSeat!.id)) {
+        detectedTimingSection = timing;
+        break;
+      }
+    }
+
+    // Update timing section if different
+    if (detectedTimingSection && detectedTimingSection !== this.selectedTimingSection) {
+      this.selectedTimingSection = detectedTimingSection;
+      console.log(`Auto-selected timing section: ${detectedTimingSection}`);
+    }
+
+    // Auto-select membership plan to match timing section
+    this.autoSelectMembershipPlan(detectedTimingSection);
+  }
+
+  /**
+   * Auto-select membership plan based on timing section
+   */
+  private autoSelectMembershipPlan(timingSection: string): void {
+    // Update form model for auto-selection
+    this.bookingFormData.timing = timingSection;
+    this.bookingFormData.purpose = timingSection;
+    
+    // Trigger change detection for OnPush strategy
+    this.cdr.markForCheck();
+  }
+
+  // Get seats for selected timing section
+  getSeatsForCurrentTiming(): Seat[] {
+    // For demo purposes, we'll show different seat availability based on timing
+    // In real implementation, this would come from backend with actual booking data
+    const timingSeatMap: { [key: string]: number[] } = {
+      'morning': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+      'afternoon': [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+      'evening': [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51],
+      'night': [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68],
+      'full-day': [69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84],
+      '24-7': [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
+    };
+
+    const seatIdsForTiming = timingSeatMap[this.selectedTimingSection] || [];
+    return this.seats.filter(seat => seatIdsForTiming.includes(seat.id));
+  }
+
+  // BOOK SEAT */
   onBookSeat(form: NgForm) {
     if (!form.valid || !this.selectedSeat) return;
 
     // Double-check seat availability before booking
     if (this.selectedSeat.status !== 'available') {
-      alert(`Seat ${this.selectedSeat.number} is no longer available. Please select a different seat.`);
+      alert(`Seat ${this.selectedSeat.seat_number} is no longer available. Please select a different seat.`);
       return;
     }
 
-    console.log(`Attempting to book seat ${this.selectedSeat.number} (ID: ${this.selectedSeat.id})`);
+    console.log(`Attempting to book seat ${this.selectedSeat.seat_number} (ID: ${this.selectedSeat.id})`);
 
     // Convert timing to start_time and end_time
-    const timeSlots = this.getTimeSlots(form.value.timing);
+    const timeSlots = this.getTimeSlots(this.selectedTimingSection);
 
     const booking: SeatBooking = {
       seat: this.selectedSeat.id,
@@ -214,16 +364,28 @@ export class SeatBookingComponent implements OnInit {
     
     switch (timing) {
       case 'morning':
-        startHour = '09:00:00';
-        endHour = '13:00:00';
+        startHour = '06:00:00';
+        endHour = '11:00:00';
+        break;
+      case 'afternoon':
+        startHour = '11:00:00';
+        endHour = '16:00:00';
         break;
       case 'evening':
-        startHour = '14:00:00';
-        endHour = '18:00:00';
+        startHour = '16:00:00';
+        endHour = '21:00:00';
         break;
       case 'full-day':
-        startHour = '09:00:00';
+        startHour = '06:00:00';
         endHour = '18:00:00';
+        break;
+      case 'night':
+        startHour = '19:00:00';
+        endHour = '06:00:00';
+        break;
+      case '24-7':
+        startHour = '00:00:00';
+        endHour = '23:59:59';
         break;
       default:
         startHour = '09:00:00';
@@ -238,7 +400,7 @@ export class SeatBookingComponent implements OnInit {
     const bufferMinutes = 5;
     const bufferTime = new Date(todayStartTime.getTime() + bufferMinutes * 60 * 1000);
     
-    // Check if the start time (with buffer) has already passed today
+    // Check if start time (with buffer) has already passed today
     // If yes, use tomorrow's date; otherwise use today
     let bookingDate = today;
     if (bufferTime <= now) {
@@ -276,7 +438,7 @@ export class SeatBookingComponent implements OnInit {
     if (!allowedTypes.includes(file.type)) {
       this.fileErrorMessage = 'Please select a valid image file (JPEG, PNG, GIF, or WebP).';
       this.selectedFile = null;
-      event.target.value = ''; // Clear the input
+      event.target.value = ''; // Clear input
       return;
     }
 
@@ -285,7 +447,7 @@ export class SeatBookingComponent implements OnInit {
     if (file.size > maxSize) {
       this.fileErrorMessage = 'File size must be less than 5MB. Please choose a smaller image.';
       this.selectedFile = null;
-      event.target.value = ''; // Clear the input
+      event.target.value = ''; // Clear input
       return;
     }
 
@@ -332,35 +494,6 @@ export class SeatBookingComponent implements OnInit {
     formData.append('end_time', this.pendingBooking.end_time);
     formData.append('purpose', this.pendingBooking.purpose); // Backend expects 'purpose'
     formData.append('payment_screenshot', this.selectedFile); // Payment screenshot for online payment
-    // #region agent log
-    const formDataEntries: any = {};
-    // Iterate over FormData entries - using type assertion for TypeScript compatibility
-    const formDataAny = formData as any;
-    if (formDataAny.entries) {
-      try {
-        const entries = formDataAny.entries() as Iterable<[string, FormDataEntryValue]>;
-        const entriesArray = Array.from(entries) as [string, FormDataEntryValue][];
-        for (const [key, value] of entriesArray) {
-          formDataEntries[key] = value instanceof File ? `[File: ${value.name}, ${value.size} bytes]` : String(value);
-        }
-      } catch (e) {
-        // Fallback: manually log known keys
-        formDataEntries['seat'] = String(this.pendingBooking.seat);
-        formDataEntries['start_time'] = this.pendingBooking.start_time;
-        formDataEntries['end_time'] = this.pendingBooking.end_time;
-        formDataEntries['purpose'] = this.pendingBooking.purpose;
-        formDataEntries['payment_screenshot'] = this.selectedFile ? `[File: ${this.selectedFile.name}, ${this.selectedFile.size} bytes]` : 'none';
-      }
-    } else {
-      // Fallback: manually log known keys if entries() is not available
-      formDataEntries['seat'] = String(this.pendingBooking.seat);
-      formDataEntries['start_time'] = this.pendingBooking.start_time;
-      formDataEntries['end_time'] = this.pendingBooking.end_time;
-      formDataEntries['purpose'] = this.pendingBooking.purpose;
-      formDataEntries['payment_screenshot'] = this.selectedFile ? `[File: ${this.selectedFile.name}, ${this.selectedFile.size} bytes]` : 'none';
-    }
-    fetch('http://127.0.0.1:7242/ingest/e63252b9-4d6f-4a01-ba28-3ad21c918bd7',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'seat-booking.component.ts:291',message:'payAndBookSeat FormData created',data:{pendingBooking:this.pendingBooking,formDataKeys:Object.keys(formDataEntries),formDataEntries},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-    // #endregion
 
     console.log('Sending booking request with form data...');
 
@@ -384,7 +517,7 @@ export class SeatBookingComponent implements OnInit {
             this.router.navigate(['/login']);
           }, 2000);
         } else {
-          // Use the ErrorHandler to get user-friendly message
+          // Use ErrorHandler to get user-friendly message
           this.paymentErrorMessage = ErrorHandler.parseError(error);
         }
       },
@@ -415,6 +548,38 @@ export class SeatBookingComponent implements OnInit {
     this.loading = false;
     this.paymentFailed = true;
     this.paymentErrorMessage =
-      'Payment verification failed. Please ensure your payment screenshot is clear and shows the complete transaction details.';
+      'Payment verification failed. Please ensure your payment screenshot is clear and shows complete transaction details.';
+  }
+
+  // Time slot management methods
+  showTimeSlotModal() {
+    this.showTimeSlotModalFlag = true;
+  }
+
+  closeTimeSlotModal() {
+    this.showTimeSlotModalFlag = false;
+    this.selectedTimeSlot = null;
+  }
+
+  addTimeSlot() {
+    if (this.timeSlotForm.valid) {
+      const newSlot: TimeSlot = {
+        id: Date.now(),
+        start_time: this.timeSlotForm.value.start_time,
+        end_time: this.timeSlotForm.value.end_time,
+        available_seats: this.timeSlotForm.value.available_seats || 50,
+        created_at: new Date().toISOString()
+      };
+      
+      this.timeSlots.push(newSlot);
+      this.timeSlotForm.reset();
+      this.closeTimeSlotModal();
+      alert('Time slot added successfully!');
+    }
+  }
+
+  deleteTimeSlot(id: number) {
+    this.timeSlots = this.timeSlots.filter(slot => slot.id !== id);
+    alert('Time slot deleted successfully!');
   }
 }
