@@ -226,6 +226,16 @@ export class SeatBookingComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  // Clear seat selection
+  clearSeatSelection() {
+    if (this.selectedSeat) {
+      this.selectedSeat.selected = false;
+      console.log(`Cleared selection for seat ${this.selectedSeat.seat_number}`);
+      this.selectedSeat = null;
+      this.cdr.markForCheck();
+    }
+  }
+
   // Select timing section
   selectTimingSection(sectionId: string) {
     this.selectedTimingSection = sectionId;

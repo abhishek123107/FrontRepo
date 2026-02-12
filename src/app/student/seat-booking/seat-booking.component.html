@@ -46,6 +46,18 @@
           <h5>Select Your Seat - {{ selectedTimingSectionName }}</h5>
         </div>
         <div class="card-body">
+          <!-- Selected Seat Notification -->
+          <div *ngIf="selectedSeat" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+            <div class="d-flex align-items-center">
+              <i class="fas fa-chair fa-2x me-3"></i>
+              <div>
+                <strong>Seat {{ selectedSeat.seat_number }} Selected!</strong>
+                <br>
+                <small class="text-muted">Ready for booking in {{ selectedTimingSectionName }} shift</small>
+              </div>
+              <button type="button" class="btn-close ms-auto" (click)="clearSeatSelection()"></button>
+            </div>
+          </div>
           <div class="mb-3 d-flex justify-content-between align-items-center">
             <small class="text-muted">
               <span *ngIf="loadingSeats">Loading seats...</span>
@@ -94,7 +106,10 @@
                 (click)="selectSeat(seat)"
                 [title]="'Seat ' + seat.seat_number + ' - ' + seat.status"
               >
-                {{ seat.seat_number }}
+                <div class="seat-number">{{ seat.seat_number }}</div>
+                <div *ngIf="seat.selected" class="selected-indicator">
+                  <i class="fas fa-check"></i>
+                </div>
               </button>
             </div>
           </div>
@@ -150,12 +165,23 @@
           <form #bookingForm="ngForm" (ngSubmit)="onBookSeat(bookingForm)">
             <!-- Selected Seat -->
             <div class="mb-3">
-              <label>Selected Seat</label>
-              <input
-                class="form-control"
-                [value]="selectedSeat?.seat_number || 'None'"
-                readonly
-              />
+              <label class="form-label fw-bold">Selected Seat</label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="fas fa-chair"></i>
+                </span>
+                <input
+                  class="form-control form-control-lg"
+                  [value]="selectedSeat?.seat_number || 'None'"
+                  readonly
+                  [class.text-success]="selectedSeat"
+                  [class.text-muted]="!selectedSeat"
+                />
+              </div>
+              <small class="form-text text-muted" *ngIf="selectedSeat">
+                <i class="fas fa-check-circle text-success"></i>
+                Seat {{ selectedSeat.seat_number }} is ready for booking
+              </small>
             </div>
 
             <!-- Auto-selection Indicator -->
