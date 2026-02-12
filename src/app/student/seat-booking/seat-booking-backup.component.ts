@@ -36,7 +36,9 @@ export class SeatBookingComponent implements OnInit {
   loading = false;
   error: string | null = null;
   isf: string = 'SBIN0001234';
-  qrCode: string = '';
+  qrCode: string = 
+    'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=UPI%20Payment%20for%20Library%20Seat%20Booking';
+  qrData: string = '';
   bookingForm: NgForm = new NgForm([], []);
   selectedTimeSlotId: number | null = null;
   loadingSeats = false;
@@ -60,7 +62,6 @@ export class SeatBookingComponent implements OnInit {
   // Cache for timing section names
   private _timingSectionCache = new Map<string, string>();
   private _lastSelectedTimingSection: string | null = null;
-  private selectedTimingSection: string = 'morning'; // Default to morning
 
   // Payment and booking state
   paymentStep = 1;
@@ -70,7 +71,6 @@ export class SeatBookingComponent implements OnInit {
   fileErrorMessage: string = '';
   paymentFailed = false;
   paymentErrorMessage = string = '';
-  selectedFile: File | null = null;
 
   // Form model for auto-selection
   bookingFormData = {
@@ -276,7 +276,7 @@ export class SeatBookingComponent implements OnInit {
       seat: this.selectedSeat.id,
       start_time: timeSlots.start_time,
       end_time: timeSlots.end_time,
-      purpose: String(form.value.purpose || '').trim().replace(/["]+/g, ''), // Clean any quotes and trim
+      purpose: String(form.value.purpose || '').trim().replace(/['"]+/g, ''), // Clean any quotes and trim
       special_requests: '' // Add empty special_requests as it's expected by backend
     };
 

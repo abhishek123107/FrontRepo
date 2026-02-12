@@ -69,7 +69,7 @@ export class SeatBookingComponent implements OnInit {
   showOfflineMessage = false;
   fileErrorMessage: string = '';
   paymentFailed = false;
-  paymentErrorMessage = string = '';
+  paymentErrorMessage: string = '';
   selectedFile: File | null = null;
 
   // Form model for auto-selection
@@ -252,91 +252,6 @@ export class SeatBookingComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // BOOK SEAT */
-  onBookSeat(form: NgForm) {
-    if (!form.valid || !this.selectedSeat) {
-      console.log('Form invalid or no seat selected:', { valid: form.valid, selectedSeat: this.selectedSeat });
-      return;
-    }
-
-    // Double-check seat availability before booking
-    if (this.selectedSeat.status !== 'available') {
-      const seatNum = this.selectedSeat.seat_number || `Seat ID ${this.selectedSeat.id}`;
-      alert(`${seatNum} is no longer available. Please select a different seat.`);
-      return;
-    }
-
-    const seatNum = this.selectedSeat.seat_number || `Seat ID ${this.selectedSeat.id}`;
-    console.log(`Attempting to book seat ${seatNum} (ID: ${this.selectedSeat.id})`);
-
-    // Convert timing to start_time and end_time
-    const timeSlots = this.getTimeSlots(this.selectedTimingSection);
-
-    const booking: any = {
-      seat: this.selectedSeat.id,
-      start_time: timeSlots.start_time,
-      end_time: timeSlots.end_time,
-      purpose: String(form.value.purpose || '').trim().replace(/["]+/g, ''), // Clean any quotes and trim
-      special_requests: '' // Add empty special_requests as it's expected by backend
-    };
-
-    // Debug: exact booking data being sent
-    console.log('=== BOOKING DEBUG ===');
-    console.log('Form value purpose:', JSON.stringify(form.value.purpose));
-    console.log('Trimmed purpose:', JSON.stringify(booking.purpose));
-    console.log('Purpose type:', typeof booking.purpose);
-    console.log('Full booking object:', JSON.stringify(booking));
-    console.log('=====================');
-
-    // Add payment fields based on payment method
-    if (form.value.payment === 'offline') {
-      // Offline payment - no payment fields needed
-      console.log('Creating offline booking:', booking);
-      this.seatBookingService.bookSeat(booking).subscribe({
-        next: (response) => {
-          console.log('✅ Booking successful:', response);
-          this.showOfflineMessage = true;
-          alert('Booking request sent. Please contact library office.');
-        },
-        error: (error) => {
-          console.error('❌ Booking failed:', error);
-          console.error('Error status:', error.status);
-          console.error('Error data:', error.error);
-          console.error('Full error object:', JSON.stringify(error, null, 2));
-          
-          if (error.status === 401) {
-            alert('Please log in to book seats.');
-            this.router.navigate(['/login']);
-          } else {
-            // Try to extract meaningful error message
-            let errorMessage = 'Booking failed. Please try again.';
-            
-            if (error.error) {
-              if (typeof error.error === 'string') {
-                errorMessage = error.error;
-              } else if (error.error.detail) {
-                errorMessage = error.error.detail;
-              } else if (error.error.purpose) {
-                errorMessage = error.error.purpose[0];
-              } else if (error.error.seat) {
-                errorMessage = error.error.seat[0];
-              }
-            }
-            
-            const friendlyMessage = ErrorHandler.parseError(error);
-            alert(`${friendlyMessage}\n\nDebug: ${errorMessage}`);
-          }
-        },
-      });
-      return;
-    }
-
-    // 🔹 ONLINE FLOW
-    this.pendingBooking = booking;
-    this.paymentStep = 2;
-    this.showPayButton = true;
-  }
-
   /** Convert timing option to start_time and end_time */
   private getTimeSlots(timing: string): {
     start_time: string;
@@ -401,6 +316,91 @@ export class SeatBookingComponent implements OnInit {
       start_time: `${bookingDate}T${startHour}Z`,
       end_time: `${bookingDate}T${endHour}Z`,
     };
+  }
+
+  // BOOK SEAT */
+  onBookSeat(form: NgForm) {
+    if (!form.valid || !this.selectedSeat) {
+      console.log('Form invalid or no seat selected:', { valid: form.valid, selectedSeat: this.selectedSeat });
+      return;
+    }
+
+    // Double-check seat availability before booking
+    if (this.selectedSeat.status !== 'available') {
+      const seatNum = this.selectedSeat.seat_number || `Seat ID ${this.selectedSeat.id}`;
+      alert(`${seatNum} is no longer available. Please select a different seat.`);
+      return;
+    }
+
+    const seatNum = this.selectedSeat.seat_number || `Seat ID ${this.selectedSeat.id}`;
+    console.log(`Attempting to book seat ${seatNum} (ID: ${this.selectedSeat.id})`);
+
+    // Convert timing to start_time and end_time
+    const timeSlots = this.getTimeSlots(this.selectedTimingSection);
+
+    const booking: any = {
+      seat: this.selectedSeat.id,
+      start_time: timeSlots.start_time,
+      end_time: timeSlots.end_time,
+      purpose: String(form.value.purpose || '').trim().replace(/[\\"]+/g, ''), // Clean any quotes and trim
+      special_requests: '' // Add empty special_requests as it's expected by backend
+    };
+
+    // Debug: exact booking data being sent
+    console.log('=== BOOKING DEBUG ===');
+    console.log('Form value purpose:', JSON.stringify(form.value.purpose));
+    console.log('Trimmed purpose:', JSON.stringify(booking.purpose));
+    console.log('Purpose type:', typeof booking.purpose);
+    console.log('Full booking object:', JSON.stringify(booking));
+    console.log('=====================');
+
+    // Add payment fields based on payment method
+    if (form.value.payment === 'offline') {
+      // Offline payment - no payment fields needed
+      console.log('Creating offline booking:', booking);
+      this.seatBookingService.bookSeat(booking).subscribe({
+        next: (response) => {
+          console.log('✅ Booking successful:', response);
+          this.showOfflineMessage = true;
+          alert('Booking request sent. Please contact library office.');
+        },
+        error: (error) => {
+          console.error('❌ Booking failed:', error);
+          console.error('Error status:', error.status);
+          console.error('Error data:', error.error);
+          console.error('Full error object:', JSON.stringify(error, null, 2));
+          
+          if (error.status === 401) {
+            alert('Please log in to book seats.');
+            this.router.navigate(['/login']);
+          } else {
+            // Try to extract meaningful error message
+            let errorMessage = 'Booking failed. Please try again.';
+            
+            if (error.error) {
+              if (typeof error.error === 'string') {
+                errorMessage = error.error;
+              } else if (error.error.detail) {
+                errorMessage = error.error.detail;
+              } else if (error.error.purpose) {
+                errorMessage = error.error.purpose[0];
+              } else if (error.error.seat) {
+                errorMessage = error.error.seat[0];
+              }
+            }
+            
+            const friendlyMessage = ErrorHandler.parseError(error);
+            alert(`${friendlyMessage}\n\nDebug: ${errorMessage}`);
+          }
+        },
+      });
+      return;
+    }
+
+    // 🔹 ONLINE FLOW
+    this.pendingBooking = booking;
+    this.paymentStep = 2;
+    this.showPayButton = true;
   }
 
   // File selection for payment screenshots
