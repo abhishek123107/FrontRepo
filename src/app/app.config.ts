@@ -12,7 +12,13 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([
         (req, next) => {
           const token = localStorage.getItem('access_token');
-          const url = req.url;
+          let url = req.url;
+
+          // Fix double slash issue by normalizing URL
+          if (url.includes('api//')) {
+            url = url.replace('api//', 'api/');
+            console.log('🔧 Fixed double slash in URL:', url);
+          }
 
           console.log('🌐 HTTP Request:', url);
           console.log('🔑 Token available:', !!token);
