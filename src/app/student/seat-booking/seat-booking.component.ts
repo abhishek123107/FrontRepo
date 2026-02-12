@@ -358,9 +358,17 @@ export class SeatBookingComponent implements OnInit {
       seat: this.selectedSeat.id,
       start_time: timeSlots.start_time,
       end_time: timeSlots.end_time,
-      purpose: form.value.purpose,
+      purpose: String(form.value.purpose || '').trim().replace(/['"]+/g, ''), // Clean any quotes and trim
       special_requests: '' // Add empty special_requests as it's expected by backend
     };
+
+    // Debug the exact booking data being sent
+    console.log('=== BOOKING DEBUG ===');
+    console.log('Form value purpose:', JSON.stringify(form.value.purpose));
+    console.log('Trimmed purpose:', JSON.stringify(booking.purpose));
+    console.log('Purpose type:', typeof booking.purpose);
+    console.log('Full booking object:', JSON.stringify(booking));
+    console.log('=====================');
 
     // Add payment fields based on payment method
     if (form.value.payment === 'offline') {
