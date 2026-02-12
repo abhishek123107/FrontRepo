@@ -7,7 +7,7 @@ import { SignupComponent } from './auth/signup/signup.component';
 import { DashboardComponent } from './student/dashboard/dashboard.component';
 import { AdminDashboardComponent } from './admin/admin-dashboard/admin-dashboard.component';
 
-import { SeatBookingComponent } from './student/seat-booking/seat-booking.component';
+import { SeatBookingComponent } from './student/seat-booking/seat-booking-fixed.component';
 import { AttendanceComponent } from './student/attendance/attendance.component';
 import { ProfileComponent } from './student/profile/profile.component';
 import { PaymentsComponent } from './student/payments/payments.component';
