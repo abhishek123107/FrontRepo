@@ -104,11 +104,22 @@ export class AuthService {
     const refresh = localStorage.getItem('refresh_token');
     if (!refresh) return throwError(() => new Error('No refresh token found'));
 
+    console.log('🔄 Refreshing token...');
     return this.http
       .post<{ access: string }>(`${this.apiUrl}/auth/token/refresh/`, {
         refresh,
       })
-      .pipe(tap((res) => this.saveToken(res.access)));
+      .pipe(
+        tap((res) => {
+          console.log('✅ Token refreshed successfully');
+          this.saveToken(res.access);
+        }),
+        catchError((err) => {
+          console.error('❌ Token refresh failed:', err);
+          this.logout();
+          return throwError(() => new Error('Session expired. Please login again.'));
+        })
+      );
   }
 
   saveToken(token: string): void {

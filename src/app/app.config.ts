@@ -15,6 +15,7 @@ export const appConfig: ApplicationConfig = {
           const url = req.url;
 
           console.log('🌐 HTTP Request:', url);
+          console.log('🔑 Token available:', !!token);
 
           // Public endpoints that don't need authentication
           const publicEndpoints = [
@@ -51,10 +52,13 @@ export const appConfig: ApplicationConfig = {
                 },
               });
               console.log('🔐 Adding Bearer token to:', url);
+              console.log('🔐 Token preview:', cleanToken.substring(0, 20) + '...');
               return next(authReq);
+            } else {
+              console.error('❌ Token is empty or invalid');
             }
           } else {
-            console.warn('❌ No token found for protected endpoint:', url);
+            console.error('❌ No token found for protected endpoint:', url);
           }
 
           return next(req);
