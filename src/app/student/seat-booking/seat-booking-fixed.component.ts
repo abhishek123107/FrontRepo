@@ -60,7 +60,7 @@ export class SeatBookingComponent implements OnInit {
   // Cache for timing section names
   private _timingSectionCache = new Map<string, string>();
   private _lastSelectedTimingSection: string | null = null;
-  private selectedTimingSection: string = 'morning'; // Default to morning
+  selectedTimingSection: string = 'morning'; // Default to morning
 
   // Payment and booking state
   paymentStep = 1;
@@ -140,7 +140,23 @@ export class SeatBookingComponent implements OnInit {
       { id: 1, seat_number: 'A1', status: 'available' },
       { id: 2, seat_number: 'A2', status: 'available' },
       { id: 3, seat_number: 'A3', status: 'available' },
-      // Add more seats as needed
+      { id: 4, seat_number: 'A4', status: 'occupied' },
+      { id: 5, seat_number: 'A5', status: 'available' },
+      { id: 6, seat_number: 'A6', status: 'available' },
+      { id: 7, seat_number: 'A7', status: 'maintenance' },
+      { id: 8, seat_number: 'A8', status: 'available' },
+      { id: 9, seat_number: 'A9', status: 'available' },
+      { id: 10, seat_number: 'A10', status: 'available' },
+      { id: 11, seat_number: 'A11', status: 'occupied' },
+      { id: 12, seat_number: 'A12', status: 'available' },
+      { id: 13, seat_number: 'A13', status: 'available' },
+      { id: 14, seat_number: 'A14', status: 'available' },
+      { id: 15, seat_number: 'A15', status: 'maintenance' },
+      { id: 16, seat_number: 'A16', status: 'available' },
+      { id: 17, seat_number: 'A17', status: 'available' },
+      { id: 18, seat_number: 'A18', status: 'available' },
+      { id: 19, seat_number: 'A19', status: 'occupied' },
+      { id: 20, seat_number: 'A20', status: 'available' }
     ];
   }
 
@@ -161,12 +177,12 @@ export class SeatBookingComponent implements OnInit {
   getSeatsForCurrentTiming(): Seat[] {
     // For demo purposes, we'll show different seat availability based on timing
     const timingSeatMap: { [key: string]: number[] } = {
-      'morning': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-      'afternoon': [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
-      'evening': [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51],
-      'night': [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68],
-      'full-day': [69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84],
-      '24-7': [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
+      'morning': [1, 2, 3, 4, 5, 6, 7],
+      'afternoon': [8, 9, 10, 11, 12, 13, 14],
+      'evening': [15, 16, 17, 18, 19, 20],
+      'night': [1, 3, 5, 7, 9, 11, 13, 15, 17, 19],
+      'full-day': [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      '24-7': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     };
 
     const seatIdsForTiming = timingSeatMap[this.selectedTimingSection] || [];
@@ -215,12 +231,12 @@ export class SeatBookingComponent implements OnInit {
   private autoSelectTimingAndMembership(): void {
     // Get seats for current timing to determine which timing section this seat belongs to
     const timingSeatMap: { [key: string]: number[] } = {
-      'morning': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
-      'afternoon': [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
-      'evening': [35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51],
-      'night': [52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68],
-      'full-day': [69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84],
-      '24-7': [85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
+      'morning': [1, 2, 3, 4, 5, 6, 7],
+      'afternoon': [8, 9, 10, 11, 12, 13, 14],
+      'evening': [15, 16, 17, 18, 19, 20],
+      'night': [1, 3, 5, 7, 9, 11, 13, 15, 17, 19],
+      'full-day': [2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      '24-7': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     };
 
     // Find which timing section this seat belongs to
@@ -455,6 +471,37 @@ export class SeatBookingComponent implements OnInit {
     this.paymentFailed = false;
     this.paymentErrorMessage = '';
     this.paymentStep = 1;
+  }
+
+  // Admin payment details
+  adminDetails = {
+    accountName: 'Library Admin',
+    accountNumber: '1234567890',
+    ifsc: 'SBIN0001234',
+    qrCode: 'assets/qr-code-placeholder.png'
+  };
+
+  // Get selected seat notification
+  getSelectedSeatNotification() {
+    return {
+      seatNumber: this.selectedSeat?.seat_number || null,
+      seatId: this.selectedSeat?.id || null
+    };
+  }
+
+  // Clear seat selection
+  clearSeatSelection() {
+    if (this.selectedSeat) {
+      this.selectedSeat.selected = false;
+      this.selectedSeat = null;
+    }
+    this.cdr.markForCheck();
+  }
+
+  // Delete time slot
+  deleteTimeSlot(slotId: number) {
+    console.log('Deleting time slot:', slotId);
+    // Implementation would go here
   }
 
   // Pay and book seat (for online payment)
