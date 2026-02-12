@@ -68,8 +68,8 @@ export class SeatBookingComponent implements OnInit {
   pendingBooking: any = null;
   showOfflineMessage = false;
   fileErrorMessage: string = '';
-  paymentFailed = false;
-  paymentErrorMessage = string = '';
+  paymentFailed: boolean = false;
+  paymentErrorMessage: string = '';
   selectedFile: File | null = null;
 
   // Form model for auto-selection
