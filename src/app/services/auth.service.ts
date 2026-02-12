@@ -43,10 +43,17 @@ export class AuthService {
     this.restoreSession();
   }
 
+  /** Helper method to ensure proper URL construction */
+  private buildUrl(endpoint: string): string {
+    const baseUrl = this.apiUrl.endsWith('/') ? this.apiUrl.slice(0, -1) : this.apiUrl;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    return `${baseUrl}${cleanEndpoint}`;
+  }
+
   /** REGISTER - नया स्टूडेंट रजिस्टर करने के लिए */
   register(data: any): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.apiUrl}/accounts/register/`, data)
+      .post<AuthResponse>(this.buildUrl('/accounts/register/'), data)
       .pipe(
         tap((res) => this.setSession(res)),
         catchError((err) => {
@@ -62,7 +69,7 @@ export class AuthService {
     password: string;
   }): Observable<AuthResponse> {
     return this.http
-      .post<AuthResponse>(`${this.apiUrl}/accounts/login/`, data)
+      .post<AuthResponse>(this.buildUrl('/accounts/login/'), data)
       .pipe(
         tap((res) => this.setSession(res)),
         catchError((err) => {
@@ -106,7 +113,7 @@ export class AuthService {
 
     console.log('🔄 Refreshing token...');
     return this.http
-      .post<{ access: string }>(`${this.apiUrl}/auth/token/refresh/`, {
+      .post<{ access: string }>(this.buildUrl('/auth/token/refresh/'), {
         refresh,
       })
       .pipe(
@@ -139,11 +146,11 @@ export class AuthService {
     const httpOptions = token ? { 
       headers: new HttpHeaders({ 'Authorization': `Bearer ${token}` })
     } : {};
-    return this.http.get<User>(`${this.apiUrl}/accounts/profile/`, httpOptions);
+    return this.http.get<User>(this.buildUrl('/accounts/profile/'), httpOptions);
   }
 
   updateProfile(data: Partial<User>): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/accounts/profile/`, data).pipe(
+    return this.http.put<User>(this.buildUrl('/accounts/profile/'), data).pipe(
       tap((updatedUser) => {
         localStorage.setItem('current_user', JSON.stringify(updatedUser));
         this.currentUserSubject.next(updatedUser);
