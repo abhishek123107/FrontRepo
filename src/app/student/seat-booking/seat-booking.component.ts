@@ -354,16 +354,26 @@ export class SeatBookingComponent implements OnInit {
     // Convert timing to start_time and end_time
     const timeSlots = this.getTimeSlots(this.selectedTimingSection);
 
-    const booking: SeatBooking = {
+    const booking: any = {
       seat: this.selectedSeat.id,
       start_time: timeSlots.start_time,
       end_time: timeSlots.end_time,
-      purpose: form.value.purpose, // Backend expects 'purpose'
-      payment_method: form.value.payment,
+      purpose: form.value.purpose,
+      special_requests: '' // Add empty special_requests as it's expected by backend
     };
 
+    // Add payment fields based on payment method
+    if (form.value.payment === 'offline') {
+      // Offline payment - no payment fields needed
+      console.log('Creating offline booking:', booking);
+    } else {
+      // Online payment - will be handled in payment step
+      console.log('Preparing online booking:', booking);
+    }
+
     // 🔹 OFFLINE FLOW
-    if (booking.payment_method === 'offline') {
+    if (form.value.payment === 'offline') {
+      console.log('Creating offline booking:', booking);
       this.seatBookingService.bookSeat(booking).subscribe({
         next: () => {
           this.showOfflineMessage = true;
