@@ -142,8 +142,23 @@ export class SeatBookingComponent implements OnInit {
         console.log('Seats array length:', seats.length);
 
         if (seats && seats.length > 0) {
+          // Debug first seat structure
+          if (seats.length > 0) {
+            console.log('First seat structure:', seats[0]);
+            console.log('First seat fields:', Object.keys(seats[0]));
+          }
+          
           // Backend returned seats, use them
-          this.seats = seats.map((seat) => ({ ...seat, selected: false }));
+          this.seats = seats.map((seat, index) => {
+            // Ensure seat_number exists, create fallback if missing
+            const seatWithNumber = {
+              ...seat,
+              selected: false,
+              seat_number: seat.seat_number || `S${seat.id || index + 1}`
+            };
+            console.log(`Processed seat ${seatWithNumber.id}:`, seatWithNumber);
+            return seatWithNumber;
+          });
           console.log('Using backend seats:', this.seats.length);
         } else {
           // Backend returned empty array, initialize mock seats
@@ -313,15 +328,28 @@ export class SeatBookingComponent implements OnInit {
 
   // BOOK SEAT */
   onBookSeat(form: NgForm) {
-    if (!form.valid || !this.selectedSeat) return;
-
-    // Double-check seat availability before booking
-    if (this.selectedSeat.status !== 'available') {
-      alert(`Seat ${this.selectedSeat.seat_number} is no longer available. Please select a different seat.`);
+    if (!form.valid || !this.selectedSeat) {
+      console.log('Form invalid or no seat selected:', { valid: form.valid, selectedSeat: this.selectedSeat });
       return;
     }
 
-    console.log(`Attempting to book seat ${this.selectedSeat.seat_number} (ID: ${this.selectedSeat.id})`);
+    // Debug selected seat data
+    console.log('Selected seat details:', {
+      seat: this.selectedSeat,
+      seat_number: this.selectedSeat.seat_number,
+      id: this.selectedSeat.id,
+      status: this.selectedSeat.status
+    });
+
+    // Double-check seat availability before booking
+    if (this.selectedSeat.status !== 'available') {
+      const seatNum = this.selectedSeat.seat_number || `Seat ID ${this.selectedSeat.id}`;
+      alert(`${seatNum} is no longer available. Please select a different seat.`);
+      return;
+    }
+
+    const seatNum = this.selectedSeat.seat_number || `Seat ID ${this.selectedSeat.id}`;
+    console.log(`Attempting to book seat ${seatNum} (ID: ${this.selectedSeat.id})`);
 
     // Convert timing to start_time and end_time
     const timeSlots = this.getTimeSlots(this.selectedTimingSection);
