@@ -358,22 +358,8 @@ export class SeatBookingComponent implements OnInit {
       seat: this.selectedSeat.id,
       start_time: timeSlots.start_time,
       end_time: timeSlots.end_time,
-      purpose: String(form.value.purpose || '').trim().replace(/['"]+/g, ''), // Clean any quotes and trim
-      special_requests: '' // Add empty special_requests as it's expected by backend
     };
-
-    // Debug the exact booking data being sent
-    console.log('=== BOOKING DEBUG ===');
-    console.log('Form value purpose:', JSON.stringify(form.value.purpose));
-    console.log('Trimmed purpose:', JSON.stringify(booking.purpose));
-    console.log('Purpose type:', typeof booking.purpose);
-    console.log('Full booking object:', JSON.stringify(booking));
-    console.log('=====================');
-
-    // Add payment fields based on payment method
-    if (form.value.payment === 'offline') {
-      // Offline payment - no payment fields needed
-      console.log('Creating offline booking:', booking);
+console.log(`Attempting to book seat ${seatNum} (ID: ${this.selectedSeat.id})`);
     } else {
       // Online payment - will be handled in payment step
       console.log('Preparing online booking:', booking);
@@ -383,17 +369,38 @@ export class SeatBookingComponent implements OnInit {
     if (form.value.payment === 'offline') {
       console.log('Creating offline booking:', booking);
       this.seatBookingService.bookSeat(booking).subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('✅ Booking successful:', response);
           this.showOfflineMessage = true;
           alert('Booking request sent. Please contact library office.');
         },
         error: (error) => {
+          console.error('❌ Booking failed:', error);
+          console.error('Error status:', error.status);
+          console.error('Error data:', error.error);
+          console.error('Full error object:', JSON.stringify(error, null, 2));
+          
           if (error.status === 401) {
             alert('Please log in to book seats.');
             this.router.navigate(['/login']);
           } else {
+            // Try to extract meaningful error message
+            let errorMessage = 'Booking failed. Please try again.';
+            
+            if (error.error) {
+              if (typeof error.error === 'string') {
+                errorMessage = error.error;
+              } else if (error.error.detail) {
+                errorMessage = error.error.detail;
+              } else if (error.error.purpose) {
+                errorMessage = error.error.purpose[0];
+              } else if (error.error.seat) {
+                errorMessage = error.error.seat[0];
+              }
+            }
+            
             const friendlyMessage = ErrorHandler.parseError(error);
-            alert(friendlyMessage || 'Booking failed. Please try again.');
+            alert(`${friendlyMessage}\n\nDebug: ${errorMessage}`);
           }
         },
       });
