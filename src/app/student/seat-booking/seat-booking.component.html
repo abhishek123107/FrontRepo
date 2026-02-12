@@ -24,8 +24,7 @@
                 <div class="card-body text-center">
                   <h6 class="card-title">{{ section.name }}</h6>
                   <p class="card-text">
-                    <small class="text-muted">{{ section.time }}</small><br>
-                    <strong class="text-primary">{{ section.price }}</strong>
+                    <small class="text-muted">{{ section.time }}</small>
                   </p>
                   <div 
                     *ngIf="selectedTimingSection === section.id" 
@@ -43,17 +42,17 @@
       <!-- Seat Selection -->
       <div class="card mb-4">
         <div class="card-header">
-          <h5>Select Your Seat - {{ selectedTimingSectionName }}</h5>
+          <h5>Select Your Seat</h5>
         </div>
         <div class="card-body">
           <!-- Selected Seat Notification -->
-          <div *ngIf="selectedSeat" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+          <div *ngIf="getSelectedSeatNotification().seatNumber" class="alert alert-success alert-dismissible fade show mb-3" role="alert">
             <div class="d-flex align-items-center">
               <i class="fas fa-chair fa-2x me-3"></i>
               <div>
-                <strong>Seat {{ selectedSeat.seat_number }} Selected!</strong>
+                <strong>Seat {{ getSelectedSeatNotification().seatNumber }} Selected!</strong>
                 <br>
-                <small class="text-muted">Ready for booking in {{ selectedTimingSectionName }} shift</small>
+                <small class="text-muted">Ready for booking</small>
               </div>
               <button type="button" class="btn-close ms-auto" (click)="clearSeatSelection()"></button>
             </div>

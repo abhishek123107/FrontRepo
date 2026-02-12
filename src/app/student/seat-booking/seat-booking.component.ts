@@ -62,15 +62,29 @@ export class SeatBookingComponent implements OnInit {
   private _lastSelectedTimingSection: string | null = null;
   private selectedTimingSection: string = 'morning'; // Default to morning
 
-  // Payment and booking state
-  paymentStep = 1;
-  showPayButton = false;
-  pendingBooking: any = null;
-  showOfflineMessage = false;
-  fileErrorMessage: string = '';
-  paymentFailed: boolean = false;
-  paymentErrorMessage: string = '';
-  selectedFile: File | null = null;
+  // Selected seat notification
+  selectedSeatNotification = {
+    seatNumber: '',
+    timingSection: ''
+  };
+
+  // Clear seat selection
+  clearSeatSelection() {
+    if (this.selectedSeat) {
+      this.selectedSeat.selected = false;
+      console.log(`Cleared selection for seat ${this.selectedSeat.seat_number}`);
+      this.selectedSeat = null;
+    }
+    this.selectedSeatNotification = {
+      seatNumber: '',
+      timingSection: ''
+    };
+  }
+
+  // Get selected seat notification
+  getSelectedSeatNotification() {
+    return this.selectedSeatNotification;
+  }
 
   // Form model for auto-selection
   bookingFormData = {
