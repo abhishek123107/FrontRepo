@@ -186,7 +186,14 @@ export class SeatBookingComponent implements OnInit {
     };
 
     const seatIdsForTiming = timingSeatMap[this.selectedTimingSection] || [];
-    return this.seats.filter(seat => seatIdsForTiming.includes(seat.id));
+    const filteredSeats = this.seats.filter(seat => seatIdsForTiming.includes(seat.id));
+    
+    console.log('Selected timing:', this.selectedTimingSection);
+    console.log('Seat IDs for timing:', seatIdsForTiming);
+    console.log('Filtered seats:', filteredSeats);
+    console.log('All seats:', this.seats);
+    
+    return filteredSeats;
   }
 
   // Track by seat ID for better performance
@@ -513,7 +520,7 @@ export class SeatBookingComponent implements OnInit {
     formData.append('seat', this.selectedSeat!.id.toString());
     formData.append('start_time', this.pendingBooking.start_time);
     formData.append('end_time', this.pendingBooking.end_time);
-    formData.append('purpose', this.pendingBooking.purpose);
+    formData.append('plan', this.pendingBooking.purpose); // Send plan instead of purpose
     formData.append('payment_screenshot', this.selectedFile);
 
     this.seatBookingService.bookSeatWithPayment(formData).subscribe({

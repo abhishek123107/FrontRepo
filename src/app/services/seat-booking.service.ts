@@ -36,28 +36,69 @@ export class SeatBookingService {
       map((response: any) => {
         // Handle paginated response
         if (response && typeof response === 'object' && 'results' in response) {
-          return response.results as Seat[];
+          return response.results.map((seat: any) => ({
+            id: seat.id,
+            seat_number: seat.number, // Map 'number' to 'seat_number'
+            status: seat.status,
+            photo: seat.photo,
+          })) as Seat[];
         }
-        return response as Seat[];
-      })
+        return [];
+      }),
     );
   }
 
   // Create booking (for offline payments)
   bookSeat(booking: SeatBooking): Observable<SeatBooking> {
+    const planValue = this.mapTimingToPlan(booking.purpose);
+    console.log('🔍 DEBUG: Sending plan value:', JSON.stringify(planValue));
+    console.log('🔍 DEBUG: Original purpose:', JSON.stringify(booking.purpose));
+    
     const bookingData = {
       seat: booking.seat,
       start_time: booking.start_time,
       end_time: booking.end_time,
-      purpose: booking.purpose,  // This will be mapped to 'plan' in backend
-      payment_method: 'offline',  // Default to offline payment
+      plan: planValue, // Map timing to backend plan choices
+      payment_method: 'offline', // Default to offline payment
     };
+    console.log('🔍 DEBUG: Full booking data:', JSON.stringify(bookingData, null, 2));
     return this.http.post<SeatBooking>(`${this.apiUrl}/bookings/`, bookingData);
+  }
+
+  // Map timing values to backend plan choices
+  private mapTimingToPlan(timing: string): string {
+    // Try different patterns based on common Django choice conventions
+    const planMapping: { [key: string]: string } = {
+      'morning': '1', // Try numeric codes first
+      'afternoon': '2', 
+      'evening': '3',
+      'full-day': '4',
+      'night': '5',
+      '24-7': '6'
+    };
+    
+    // Fallback to other patterns if numeric doesn't work
+    const fallbackMapping: { [key: string]: string } = {
+      'morning': 'morning_shift',
+      'afternoon': 'afternoon_shift', 
+      'evening': 'evening_shift',
+      'full-day': 'full_day',
+      'night': 'night_shift',
+      '24-7': 'full_access'
+    };
+    
+    return planMapping[timing] || fallbackMapping[timing] || '1';
   }
 
   // Create booking with payment screenshot (for online payments)
   bookSeatWithPayment(formData: FormData): Observable<SeatBooking> {
-    // FormData should contain: seat, start_time, end_time, purpose, payment_screenshot
+    // Replace purpose with plan in FormData
+    if (formData.has('purpose')) {
+      const purposeValue = formData.get('purpose') as string;
+      formData.delete('purpose');
+      formData.append('plan', this.mapTimingToPlan(purposeValue));
+    }
+    // FormData should contain: seat, start_time, end_time, plan, payment_screenshot
     return this.http.post<SeatBooking>(`${this.apiUrl}/bookings/`, formData);
   }
 
